@@ -1,6 +1,18 @@
-import React from 'react'
+'use client'
+
+import React, {useState} from 'react'
+import {Category} from "@/types";
 
 const ModernFusionProductCard = () => {
+	const [categories, setCategories] = useState<Category[]>([])
+	const [name, setName] = useState<string>('')
+	const [categoryId, setCategoryId] = useState<string>("")
+	const [price, setPrice] = useState<string>('')
+	const [description, setDescription] = useState<string>('')
+	const [selectedSizes, setSelectedSizes] = useState<string[]>([])
+
+
+
 	return (
 		<div className='md:col-span-9 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter'>
 

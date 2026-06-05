@@ -25,3 +25,7 @@ export const NEW_ARRIVAL_ITEMS = [
 	{id: 7, image: '/img7.png', label: 'Sophisticated Nigeria Attire', href: '/new-arrival', price: "$750", sub: "Mulberry Silk Adire"},
 	{id: 8, image: '/img8.png', label: 'Contemporary', href: '/new-arrival', price: "$350", sub: "Contemporary"},
 ]
+
+export const CASUAL_CHIC_ITEMS = [
+	{id: 1, image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuChBkb3UbW2TdKcUIuvPrryOTuCBJXR0u38sGFTOI4ksl_gzOwiHHScwSVb9Zok5HKT8AD5fOjqiohcbOBY4borK35UsbiNGwVbX06T4UIu49pH-f0wq0N404ydZKAcWJ4Ul15r-P-ifWPfcivfRAEufM0DrLyqyK5J28QpJbZHxBRc2pMK-02glV_8konRWSDxMTBEaRCVEX1EPPhGLYnpIEBdrnrL2gU0s93sJwigEUpMma_--u4BsHYTWIUV1W2RTM8M9EzvCFyK', title: 'Limited Edition', sub: 'Linen Horizon Tunic', price: '$185.00' }
+]

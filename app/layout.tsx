@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter, Montserrat } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
+import {CartProvider} from "@/app/context/CartContext";
+
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,6 +37,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
+      <CartProvider>
     <html
       lang="en"
       className={`${inter.variable} ${mont.variable}  ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
@@ -47,5 +51,6 @@ export default function RootLayout({
       {children}
       </body>
     </html>
+      </CartProvider>
   );
 }
