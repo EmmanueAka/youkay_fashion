@@ -1,9 +1,10 @@
 'use client'
-
-import React, { useState } from 'react'
+export const dynamic = 'force-dynamic'
+import React, { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from "@/lib/supabaseClient"
+
 
 const CustomerSignIn = () => {
 	const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -61,6 +62,7 @@ const CustomerSignIn = () => {
 	}
 
 	return (
+		<Suspense fallback={<div>Loading authentication layout...</div>}>
 		<div className='bg-background min-h-screen flex items-center justify-center relative overflow-hidden px-6'>
 			<div className='absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-[120px]'></div>
 
@@ -112,6 +114,7 @@ const CustomerSignIn = () => {
 				</div>
 			</main>
 		</div>
+		</Suspense>
 	)
 }
 
