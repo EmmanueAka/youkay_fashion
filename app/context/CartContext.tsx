@@ -19,6 +19,7 @@ interface CartContextType{
 	clearCart: () => void;
 	getCartTotal: () => number;
 	getCartCount: () => number;
+	updateCartQuantity: (productId: string, size?: string, quantity: number) => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
