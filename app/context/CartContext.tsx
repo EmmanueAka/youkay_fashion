@@ -86,6 +86,16 @@ export const CartProvider: React.FC<{ children: React.ReactNode}> = ({ children}
 		);
 	};
 
+	const updateCartQuantity = (productId: string, size: string | undefined, quantity: number) => {
+		setCart((prev) =>
+			prev.map((item) =>
+				item.id === productId && item.selectedSize === size
+				? {...item, quantity }
+					: item
+			).filter((item) => item.quantity > 0)
+		)
+	}
+
 	const clearCart = () => setCart([]);
 
 	const getCartTotal = () => cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
@@ -93,7 +103,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode}> = ({ children}
 	const getCartCount = () => cart.reduce((sum, item) => sum + item.quantity, 0)
 
 	return (
-		<CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart, getCartTotal, getCartCount}}>
+		<CartContext.Provider value={{ cart, addToCart, removeFromCart, clearCart, getCartTotal, getCartCount, updateCartQuantity}}>
 			{children}
 		</CartContext.Provider>
 	);
