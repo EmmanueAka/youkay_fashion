@@ -86,7 +86,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode}> = ({ children}
 		);
 	};
 
-	const updateCartQuantity = (productId: string, size: string | undefined, quantity: number) => {
+	const updateCartQuantity = (productId: string,  quantity: number, size: string | undefined,) => {
 		setCart((prev) =>
 			prev.map((item) =>
 				item.id === productId && item.selectedSize === size
