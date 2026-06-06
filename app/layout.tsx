@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Inter, Montserrat } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
-import {CartProvider} from "@/app/context/CartContext";
+import Providers from "@/app/provider";
 
 
 
@@ -36,8 +36,10 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
+
   return (
-      <CartProvider>
+      <Providers>
     <html
       lang="en"
       className={`${inter.variable} ${mont.variable}  ${geistSans.variable} ${geistMono.variable} h-full antialiased`}
@@ -51,6 +53,6 @@ export default function RootLayout({
       {children}
       </body>
     </html>
-      </CartProvider>
+      </Providers>
   );
 }

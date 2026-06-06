@@ -5,7 +5,7 @@ import NewArrivalsCard from "@/components/NewArrivalsCard";
 
 const Collections = () => {
 	return (
-		<div className='mt-12'>
+		<div className='mt-12' id="collection">
 			<div className='px-12 mt-6'>
 				<div className='w-full flex justify-between'>
 					<div>

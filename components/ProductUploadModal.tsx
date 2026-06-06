@@ -21,11 +21,14 @@ const ProductUploadModal = ({onClose, onSuccess} : ProductUploadModalProps)  => 
 	const [newTagInput, setNewTagInput] = useState<string>('')
 	const [isAddingTag, setIsAddingTag] = useState<boolean>(false)
 
-
-	// Image State Management
+	// Image State Management (Primary View)
 	const [imageFile, setImageFile] = useState<File | null>(null)
 	const [imagePreview, setImagePreview] = useState<string>('')
 	const [isSubmitting, setIsSubmitting] = useState<boolean>(false)
+
+	// NEW: State arrays to capture multi-angle secondary views
+	const [galleryFiles, setGalleryFiles] = useState<(File | null)[]>([null, null, null])
+	const [galleryPreviews, setGalleryPreviews] = useState<string[]>(['', '', ''])
 
 	const availableSizes = ['XS', 'S', 'M', 'L', 'XL']
 
@@ -46,21 +49,49 @@ const ProductUploadModal = ({onClose, onSuccess} : ProductUploadModalProps)  => 
 			setProductTags([...productTags, trimmed])
 			setSelectedTag(trimmed)
 		}
-
 		setNewTagInput('')
 		setIsAddingTag(false)
 	}
 
-
 	const handleRemoveTag = (tagToRemove: string) => {
 		setProductTags(productTags.filter((tag) => tag !== tagToRemove))
 	}
+
 	const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
 		if(e.target.files && e.target.files[0]) {
 			const file = e.target.files[0]
 			setImageFile(file)
 			setImagePreview(URL.createObjectURL(file))
 		}
+	}
+
+	// NEW: Individual position file assignment handler
+	const handleGalleryFileChange = (e: ChangeEvent<HTMLInputElement>, index: number) => {
+		if (e.target.files && e.target.files[0]) {
+			const file = e.target.files[0]
+
+			const newFiles = [...galleryFiles]
+			newFiles[index] = file
+			setGalleryFiles(newFiles)
+
+			const newPreviews = [...galleryPreviews]
+			newPreviews[index] = URL.createObjectURL(file)
+			setGalleryPreviews(newPreviews)
+		}
+	}
+
+	// NEW: Clear assigned image from state
+	const handleRemoveGalleryImage = (index: number, e: React.MouseEvent) => {
+		e.preventDefault()
+		e.stopPropagation()
+
+		const newFiles = [...galleryFiles]
+		newFiles[index] = null
+		setGalleryFiles(newFiles)
+
+		const newPreviews = [...galleryPreviews]
+		newPreviews[index] = ''
+		setGalleryPreviews(newPreviews)
 	}
 
 	const handleSizeToggle = (size: string) => {
@@ -80,19 +111,18 @@ const ProductUploadModal = ({onClose, onSuccess} : ProductUploadModalProps)  => 
 		setIsSubmitting(true)
 
 		let imageUrl = ''
+		let galleryUrls: string[] = []
 
 		try {
+			// 1. Upload primary cover view asset
 			if(imageFile){
 				const fileExt = imageFile.name.split('.').pop()
-				const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
+				const fileName = `${Date.now()}-primary-${Math.random().toString(36).substring(2)}.${fileExt}`
 				const filePath = `product-images/${fileName}`
 
 				const { error: uploadError } = await supabase.storage
 					.from('products')
-					.upload(filePath, imageFile, {
-						cacheControl: '3600',
-						upsert: false
-					})
+					.upload(filePath, imageFile, { cacheControl: '3600', upsert: false })
 
 				if(uploadError) throw uploadError
 
@@ -101,8 +131,31 @@ const ProductUploadModal = ({onClose, onSuccess} : ProductUploadModalProps)  => 
 					.getPublicUrl(filePath)
 
 				imageUrl = publicUrlData.publicUrl
+				galleryUrls.push(imageUrl) // Main cover view populates the first slot in the images column
 			}
 
+			// 2. Concurrently upload present secondary views
+			for (let i = 0; i < galleryFiles.length; i++) {
+				const activeFile = galleryFiles[i];
+				if (activeFile) {
+					const ext = activeFile.name.split('.').pop()
+					const pathName = `product-images/${Date.now()}-angle-${i}-${Math.random().toString(36).substring(2)}.${ext}`
+
+					const { error: gErr } = await supabase.storage
+						.from('products')
+						.upload(pathName, activeFile, { cacheControl: '3600', upsert: false })
+
+					if (gErr) throw gErr
+
+					const { data: pUrl } = supabase.storage
+						.from('products')
+						.getPublicUrl(pathName)
+
+					galleryUrls.push(pUrl.publicUrl)
+				}
+			}
+
+			// 3. Write structured payload to database rows
 			const { error: insertError } = await supabase
 				.from('products')
 				.insert([
@@ -112,6 +165,7 @@ const ProductUploadModal = ({onClose, onSuccess} : ProductUploadModalProps)  => 
 						price: parseFloat(price),
 						description,
 						image_url: imageUrl,
+						images: galleryUrls, // Maps directly to the text array migration column field
 						sizes: selectedSizes,
 						tag: selectedTag,
 						stock: totalUnits ? parseInt(totalUnits, 10) : null
@@ -130,6 +184,7 @@ const ProductUploadModal = ({onClose, onSuccess} : ProductUploadModalProps)  => 
 			setIsSubmitting(false)
 		}
 	}
+
 	return (
 		<motion.div
 			initial={{ opacity: 0, y: 50 }}
@@ -199,18 +254,49 @@ const ProductUploadModal = ({onClose, onSuccess} : ProductUploadModalProps)  => 
 							</label>
 
 							<div className='grid grid-cols-3 gap-3 w-full'>
-								<button className='aspect-sqaure rounded-lg border-2 border-dashed border-outline-variant/40 flex items-center justify-center text-on-surface-variant/40 hover:border-primary/40 hover:text-primary transition-all cursor-pointer'>
-									<span className='material-symbols-outlined'>add_photo_alternate</span>
-								</button>
+								{[0, 1, 2].map((idx) => {
+									const labelText = idx === 0 ? 'Rear View' : idx === 1 ? 'Side View' : 'Detail View';
+									return (
+										<div key={idx} className="relative aspect-square w-full">
+											<input
+												type="file"
+												id={`gallery-upload-${idx}`}
+												accept="image/*"
+												className="hidden"
+												onChange={(e) => handleGalleryFileChange(e, idx)}
+											/>
 
-								<button className='aspect-sqaure rounded-lg border-2 border-dashed border-outline-variant/40 flex items-center justify-center text-on-surface-variant/40 hover:border-primary/40 hover:text-primary transition-all cursor-pointer'>
-									<span className='material-symbols-outlined'>add_photo_alternate</span>
-								</button>
+											{galleryPreviews[idx] ? (
+												<div className="relative w-full h-full rounded-lg overflow-hidden border border-outline-variant group">
+													<img src={galleryPreviews[idx]} alt={labelText} className="w-full h-full object-cover" />
+													<button
+														type="button"
+														onClick={(e) => handleRemoveGalleryImage(idx, e)}
+														className="absolute top-1 right-1 p-1 bg-black/60 rounded-full text-white hover:bg-red-500 transition-colors cursor-pointer z-10 flex items-center justify-center"
+														title="Remove Image"
+													>
+														<span className="material-symbols-outlined text-xs">close</span>
+													</button>
+													<div className="absolute bottom-0 left-0 right-0 bg-black/50 text-[9px] text-white text-center py-0.5 font-medium uppercase tracking-wider">
+														{labelText.split(' ')[0]}
+													</div>
+												</div>
+											) : (
+												<label
+													htmlFor={`gallery-upload-${idx}`}
+													className="w-full h-full rounded-lg border-2 border-dashed border-outline-variant/40 flex flex-col items-center justify-center text-on-surface-variant/40 hover:border-primary/40 hover:text-primary hover:bg-primary/5 transition-all cursor-pointer text-center p-1"
+													title={`Upload ${labelText}`}
+												>
+													<span className="material-symbols-outlined text-2xl">add_photo_alternate</span>
+													<span className="text-[9px] font-bold uppercase tracking-tighter mt-1">{labelText.split(' ')[0]}</span>
+												</label>
+											)}
+										</div>
+									);
+								})}
 
-								<button className='aspect-sqaure rounded-lg border-2 border-dashed border-outline-variant/40 flex items-center justify-center text-on-surface-variant/40 hover:border-primary/40 hover:text-primary transition-all cursor-pointer'>
-									<span className='material-symbols-outlined'>add_photo_alternate</span>
-								</button>
 							</div>
+
 						</div>
 
 					{/*	Inventory Quick Stats*/}

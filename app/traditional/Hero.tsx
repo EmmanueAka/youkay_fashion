@@ -2,6 +2,8 @@ import React, {useEffect, useState} from 'react'
 import Footer from "@/components/Footer";
 import {useCart} from "@/app/context/CartContext";
 import {supabase} from "@/lib/supabaseClient";
+import {useQuery} from "@tanstack/react-query";
+import Link from "next/link";
 
 
 const ITEMS_PER_PAGE = 4;
@@ -15,19 +17,13 @@ const SORT_OPTIONS = [
 
 const Hero = () => {
 	const [products, setProducts] = useState<any[]>([]);
-	const [loading, setLoading] = useState<boolean>(true);
-	const [loadingMore, setLoadingMore] = useState<boolean>(false);
-	const [categoryId, setCategoryId] = useState<string | null>(null);
 	const [page, setPage] = useState<number>(0);
 	const [hasMore, setHasMore] = useState<boolean>(true);
-
-	// Track Selected sorting choice
 	const [sortBy, setSortBy] = useState<string>('created_at_desc');
-
-	// Tracks chosen sizes per product ID, e.g., { "prod_123": "M" }
 	const [chosenSizes, setChosenSizes] = useState<Record<string, string>>({});
 
-	const { addToCart } = useCart();
+	// Destructure context methods (assuming standard updateCartQuantity / removeFromCart support)
+	const { addToCart, cart, updateCartQuantity, removeFromCart } = useCart();
 
 
 	// 1. Clean up tags defensively for display
@@ -83,93 +79,112 @@ const Hero = () => {
 	}
 
 
+	const { data: categoryId } = useQuery({
+		queryKey: ['category', 'Traditional'],
+		queryFn: async () => {
+			const { data, error } = await supabase
+				.from('categories')
+				.select("id")
+				.eq("name", "Traditional")
+				.single();
+			if (error) throw error;
+			return data?.id || null;
+		},
+		staleTime: 1000 * 60 * 60,
+	});
+
+	// 2. Cached Paginated & Sorted Product Query Engine
+	const currentSort = SORT_OPTIONS.find(opt => opt.value === sortBy) || SORT_OPTIONS[0];
+
+	const { data: fetchedProducts, isLoading, isFetching } = useQuery({
+		queryKey: ['products', categoryId, page, sortBy],
+		queryFn: async () => {
+			const from = page * ITEMS_PER_PAGE;
+			const to = from + ITEMS_PER_PAGE - 1;
+
+			const { data, error } = await supabase
+				.from("products")
+				.select("*")
+				.eq("category_id", categoryId)
+				.order(currentSort.column, { ascending: currentSort.ascending })
+				.range(from, to);
+
+			if (error) throw error;
+			return data || [];
+		},
+		enabled: !!categoryId,
+		staleTime: 1000 * 60 * 5,
+	});
+
+	// 3. Synchronize incoming cached streams into view state safely
 	useEffect(() => {
-		const fetchCategoryId = async () => {
-			try {
-				const { data: category, error: catError } = await supabase
-					.from('categories')
-					.select("id")
-					.eq("name", "Traditional")
-					.single();
-
-				if (catError) throw catError;
-				if (category) setCategoryId(category.id);
-			} catch (err) {
-				console.error("Error fetching category configuration:", err);
-				setLoading(false);
-			}
-		};
-		fetchCategoryId();
-	}, []);
-
-	// 3. Paginated fetch engine linked to page and categoryId changes
-	useEffect(() => {
-		if (!categoryId) return;
-
-		const fetchProducts = async () => {
-			try {
-				if (page === 0) setLoading(true);
-				else setLoadingMore(true);
-
-				const from = page * ITEMS_PER_PAGE;
-				const to = from + ITEMS_PER_PAGE - 1;
-
-				const currentSort = SORT_OPTIONS.find(opt => opt.value === sortBy) || SORT_OPTIONS[0];
-
-				const { data: productsData, error: prodError } = await supabase
-					.from("products")
-					.select("*")
-					.eq("category_id", categoryId)
-					.order(currentSort.column, { ascending: currentSort.ascending})
-					.range(from, to);
-
-				if (prodError) throw prodError;
-
-				const fetchedItems = productsData || [];
-
-				// If we returned less items than the limit, we hit the end of the collection
-				if (fetchedItems.length < ITEMS_PER_PAGE) {
-					setHasMore(false);
+		if (fetchedProducts && fetchedProducts.length > 0) {
+			setProducts(prev => {
+				if (page === 0) {
+					return fetchedProducts;
 				}
-
-				setProducts(prev => (page === 0 ? fetchedItems : [...prev, ...fetchedItems]));
-			} catch (error) {
-				console.error("Data ingestion pipeline error:", error);
-			} finally {
-				setLoading(false);
-				setLoadingMore(false);
+				const existingIds = new Set(prev.map(p => p.id));
+				const filteredNew = fetchedProducts.filter(p => !existingIds.has(p.id));
+				return [...prev, ...filteredNew];
+			});
+			setHasMore(fetchedProducts.length === ITEMS_PER_PAGE);
+		} else if (page === 0 && fetchedProducts && fetchedProducts.length === 0 && !isLoading && !isFetching) {
+			if (products.length !== 0) {
+				setProducts([]);
 			}
-		};
-
-		fetchProducts();
-	}, [categoryId, page, sortBy]);
-
-
+			setHasMore(false);
+		}
+	}, [fetchedProducts, page, isLoading, isFetching, products.length]);
 
 	const handleSelectSize = (productId: string, size: string) => {
-		setChosenSizes(prev => ({
-			...prev, [productId]: size
-		}));
+		setChosenSizes(prev => ({ ...prev, [productId]: size }));
 	};
 
 	const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
 		setSortBy(e.target.value);
 		setPage(0);
-		setHasMore(true)
-	}
+		setHasMore(true);
+		setProducts([]); // Instantly empty old styles to prevent data flickering
+	};
 
 	const handleAddToCartWithValidation = (product: any) => {
-		const selectedSize = chosenSizes[product.id]
-		if(!selectedSize && product.sizes && product.sizes.length > 0){
-			alert("Please select a canvas size before checkout processing")
-			return
+		const selectedSize = chosenSizes[product.id];
+		if (!selectedSize && product.sizes && product.sizes.length > 0) {
+			alert("Please select a canvas size before checkout processing");
+			return;
 		}
 
 		addToCart({
 			...product,
 			selectedSize: selectedSize
-		})
-	}
+		});
+	};
+
+	// Directly increments or modifies quantities based on context schema capabilities
+	const handleAdjustQuantity = (productId: string, currentQty: number, adjustment: number) => {
+		const targetProduct = products.find(p => p.id === productId);
+		const selectedSize = chosenSizes[productId] || (targetProduct?.sizes?.[0] || "");
+
+		if(adjustment > 0) {
+			addToCart({
+				...targetProduct,
+				selectedSize: selectedSize
+			})
+		}else if(adjustment < 0){
+			removeFromCart(productId, selectedSize);
+		}
+
+	};
+
+	// Helper function to extract exact matching cart quantities per item ID
+	const getProductQuantity = (productId: string) => {
+		return cart
+			.filter(item => item.id === productId)
+			.reduce((sum, item) => sum + item.quantity, 0);
+	};
+
+	// Split data elements cleanly to display highlight features apart from standard grids
+	const mainProduct = products[0];
 
 
 	return (
@@ -207,41 +222,79 @@ const Hero = () => {
 						<h2 className='font-headline-lg text-headline-lg mb-4'>Fabric Legacies</h2>
 						<p className='font-body-md text-body-md text-on-surface-variant'>We source our textiles directly from master weavers across the continent, ensuring every garment supports the preservation of ancient techniques.</p>
 					</div>
+
+					{/*Sorting Dropdown Filter UI*/}
 					<div className='flex gap-4'>
-						<button className='p-4 border border-outline-variant rounded-full hover:bg-primary hover:text-white transition-all'>
-							<span className='material-symbols-outlined' data-icon='chevron_left'>chevron_left</span>
-						</button>
-						<button className='p-4 border border-outline-variant rounded-full hover:bg-primary hover:text-white transition-all'>
-							<span className='material-symbols-outlined' data-icon='chevron_right'>chevron_right</span>
-						</button>
-					</div>
-				</div>
-				<div className='grid gird-cols-1 md:grid-cols-12 gap-gutter'>
-					<div className='md:col-span-7 group relative overflow-hidden roundex-xl h-[500px] shadow-sm'>
-						{products.map((product) => (
-						<img key={product.id} src={product.image_url} alt={product.name} className='w-full h-full object-cover transition-transform druation-700 group-hover:scale-110 '/>
-						))}
-						<div className='absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent'></div>
-						<div className='absolute bottom-0 left-0 right-0 p-4 glass-card m-6 rounded-lg'>
-							<span className='font-label-sm text-label-sm text-secondary-container mb-2 block'>GHANA</span>
-							{products.map((product) => (
-							<h3 key={product.id} className='font-headline-lg text-headline-lg text-white mb-2'>{product.title}</h3>
+						<select
+							value={sortBy}
+							onChange={handleSortChange}
+							className="px-4 py-2  border border-outline-variant rounded-xl bg-background text-on-background font-label-md focus:outline-none focus:border-primary transition-all cursor-pointer"
+						>
+							{SORT_OPTIONS.map(opt => (
+								<option key={opt.value} value={opt.value}>{opt.label}</option>
 							))}
-							<p className='text-white/80 font-body-sm'>Reserved for kings and queens, our Kente is woven using the double-weave technique in Bonwire.</p>
-						</div>
-					</div>
-					<div className='md:col-span-5 group relative overflow-hidden rounded-xl h-[500px] shadow-sm'>
-						<img src='/trad.png' alt='traditional attire' className='w-full h-full object-cover transition-transoform duration-700 group-hover:scale-110'/>
-						<div className='absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent'></div>
-						<div className='absolute bottom-0 left-0 right-0 p-4 glass-card m-6 rounded-lg'>
-							<span className='font-label-sm text-label-sm text-secondary mb-2 block'>NIGERIA</span>
-							<h3 className='font-headline-lg text-headline-lg text mb-2 '>Aso-Oke Silk</h3>
-							<p className='text-white/80 font-body-md'>The 'Top Cloth' of the Yoruba, known for its prestige and structural elegance.</p>
-						</div>
-					</div>
-					<div>
+						</select>
 					</div>
 				</div>
+				{isLoading && page === 0 ? (
+					<div className="text-center py-12 text-on-surface-variant">Loading curated heritage...</div>
+				): products.length === 0 ? (
+					<div className="text-center py-12 text-on-surface-variant">No traditional collections available matching selection.</div>
+				) : (
+					<div className='grid gird-cols-1 md:grid-cols-12 gap-gutter'>
+
+						{mainProduct && (
+							<div className='md:col-span-7 group relative overflow-hidden roundex-xl h-[500px] shadow-sm'>
+								{renderTag(mainProduct.tags)}
+								<img key={mainProduct.id} src={mainProduct.image_url} alt={mainProduct.name} className='w-full h-full object-cover transition-transform druation-700 group-hover:scale-110 '/>
+								<div className='absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent'></div>
+								<div className='absolute bottom-0 left-0 right-0 p-4 glass-card m-6 rounded-lg'>
+									<div>
+										<span className='font-label-sm text-label-sm text-secondary-container mb-2 block'>GHANA</span>
+										<h3 className='font-headline-lg text-headline-lg text-white mb-2'>{mainProduct.name}</h3>
+										<p className='text-white/80 font-body-sm'>{mainProduct.description}</p>
+
+										{/* Main Spotlight Product Cart Action Counter Panel */}
+										{(() => {
+											const qty = getProductQuantity(mainProduct.id);
+											if (qty === 0) return null;
+											return (
+												<div className="inline-flex items-center gap-2 mt-3 bg-white/20 backdrop-blur-md px-2 py-1 rounded border border-white/30 text-white">
+													<button
+														onClick={() => handleAdjustQuantity(mainProduct.id, qty, -1)}
+														className="w-5 h-5 flex items-center justify-center font-bold hover:bg-white/20 rounded cursor-pointer transition-colors"
+													>
+														-
+													</button>
+													<span className="text-xs font-bold tracking-wider uppercase">In Bag: {qty}</span>
+													<button
+														onClick={() => handleAdjustQuantity(mainProduct.id, qty, 1)}
+														className="w-5 h-5 flex items-center justify-center font-bold hover:bg-white/20 rounded cursor-pointer transition-colors"
+													>
+														+
+													</button>
+												</div>
+											);
+										})()}
+									</div>
+
+								</div>
+							</div>
+						)}
+						<div className='md:col-span-5 group relative overflow-hidden rounded-xl h-[500px] shadow-sm'>
+							<img src='/trad.png' alt='traditional attire' className='w-full h-full object-cover transition-transoform duration-700 group-hover:scale-110'/>
+							<div className='absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent'></div>
+							<div className='absolute bottom-0 left-0 right-0 p-4 glass-card m-6 rounded-lg'>
+								<span className='font-label-sm text-label-sm text-secondary mb-2 block'>NIGERIA</span>
+								<h3 className='font-headline-lg text-headline-lg text mb-2 '>Aso-Oke Silk</h3>
+								<p className='text-white/80 font-body-md'>The 'Top Cloth' of the Yoruba, known for its prestige and structural elegance.</p>
+							</div>
+						</div>
+						<div>
+						</div>
+					</div>
+				)}
+
 			</section>
 			<section className='py-24 bg-surface-container-low'>
 				<div className='px-margin-desktop max-w-container-max mx-auto'>
@@ -267,13 +320,13 @@ const Hero = () => {
 				</div>
 
 				<div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter px-6'>
-					{loading ? (
+					{isLoading && page === 0 ? (
 						<div className="col-span-full text-center py-10 text-on-surface-variant">Loading our collection...</div>
 					) : products.length === 0 ? (
 						<div className="col-span-full text-center py-10 text-on-surface-variant">No items found in this collection.</div>
 					) : (
 						products.map((product) => (
-							<div key={product.id} className='group flex flex-col justify-between h-full'>
+							<Link href={`/products/${product.id}`} key={product.id} className='group flex flex-col justify-between h-full'>
 								<div>
 									<div className='relative aspect-[3/4] overflow-hidden rounded-xl mb-4 shadow-sm bg-surface-container-high'>
 										<img
@@ -298,6 +351,7 @@ const Hero = () => {
 								</div>
 
 								{/* Sizes Selector Implementation Interface */}
+
 								{product.sizes && product.sizes.length > 0 && (
 									<div className='mt-2 pt-2 border-t border-outline-variant/10'>
 										<span className='text-[11px] uppercase tracking-wider text-on-surface-variant block mb-2 font-medium'>Select Size:</span>
@@ -322,7 +376,30 @@ const Hero = () => {
 										</div>
 									</div>
 								)}
-							</div>
+
+								{/* Collection Grid Interactive Quantity Counter Block */}
+								{(() => {
+									const productQuantity = getProductQuantity(product.id);
+									if(productQuantity === 0) return null;
+									return (
+										<div className='inline-flex items-center gap-1.5 px-2 bg-primary/10 text-primary font-label-sm text-[11px] mt-2 font-bold uppercase w-max rounded py-0.5 border border-primary/20'>
+											<button
+												onClick={() => handleAdjustQuantity(product.id, productQuantity, -1)}
+												className="px-1 hover:bg-primary/20 rounded cursor-pointer transition-colors"
+											>
+												-
+											</button>
+											<span>In Cart: {productQuantity}</span>
+											<button
+												onClick={() => handleAdjustQuantity(product.id, productQuantity, 1)}
+												className="px-1 hover:bg-primary/20 rounded cursor-pointer transition-colors"
+											>
+												+
+											</button>
+										</div>
+									)
+								})()}
+							</Link>
 						))
 					)}
 				</div>
@@ -331,18 +408,18 @@ const Hero = () => {
 				{hasMore && products.length > 0 && (
 					<div className='mt-20 text-center'>
 						<button
-							disabled={loadingMore}
+							disabled={isFetching}
 							onClick={() => setPage(prev => prev + 1)}
 							className='px-12 py-4 border-2 border-primary text-primary font-bold rounded-full hover:bg-primary hover:text-white transition-all scale-95 active:scale-90 disabled:opacity-50 cursor-pointer'
 						>
-							{loadingMore ? 'Fetching Collections...' : 'Load More Designs'}
+							{isFetching ? 'Fetching Collections...' : 'Load More Designs'}
 						</button>
 					</div>
 				)}
 
 			</section>
 			<section className='py-32 bg-background overflow-hidden relative'>
-				<div className='absolute top-0 left-0 w-full h-full opacity-5 pointer-events:none'>
+				<div className='absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none'>
 					<div className='grid grid-cols-6 h-full'>
 						<div className='border-r border-primary'></div>
 						<div className='border-r border-primary'></div>

@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { NEW_ARRIVAL_ITEMS } from '@/lib/constants'
 import {ShoppingBasket, ShoppingCart} from "lucide-react";
+import {useQuery} from "@tanstack/react-query";
+import {supabase} from "@/lib/supabaseClient";
 
 const cardVariants = {
 	enter: {
@@ -57,10 +59,10 @@ const Card = ({
 			{/* Wraps both image container and label text underneath */}
 			<div className="w-full h-full group flex flex-col">
 				<div className="relative w-full h-full rounded-2xl overflow-hidden shadow-lg  bg-neutral-100">
-				<Link href={item.href}>
+				<Link href={`/products/${item.id}`}>
 					<img
-						src={item.image}
-						alt={item.label}
+						src={item.image_url || "/fallback"}
+						alt={item.name}
 						className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
 					/>
 				</Link>
@@ -73,11 +75,11 @@ const Card = ({
 					<div className='w-full px-2'>
 						<div className='flex justify-between items-center w-full'>
 							<h3 className="text-sm font-bold text-neutral-800 transition-colors ">
-								{item.label}
+								{item.name}
 							</h3>
-							<p className='primary-text text-sm'>{item.price}</p>
+							<p className='primary-text text-sm'>${Number(item.price).toFixed(2)}</p>
 						</div>
-						<p className='text-start text-sm mt-2'>{item.sub}</p>
+						<p className='text-start text-sm mt-2'>{item.description}</p>
 					</div>
 				</div>
 			</div>
@@ -89,6 +91,22 @@ const NewArrivalsCard = () => {
 	const [activeIndex, setActiveIndex] = useState(0)
 	const [isMobile, setIsMobile] = useState(false)
 
+
+	const { data: newArrivals = [], isLoading } = useQuery({
+		queryKey: ['products'],
+		queryFn: async () => {
+			const { data, error} = await supabase
+				.from('products')
+				.select('*')
+				.order('created_at', { ascending: false})
+				.limit(6)
+
+			if (error) throw error;
+			return data || []
+		},
+
+		staleTime: 1000 * 60 * 60 * 5,
+	})
 	// Tracks layout viewports to dynamically alter state arrays
 	useEffect(() => {
 		const handleResize = () => setIsMobile(window.innerWidth < 768)
@@ -98,11 +116,13 @@ const NewArrivalsCard = () => {
 	}, [])
 
 	const handleNext = () => {
-		setActiveIndex((prev) => (prev + 1) % NEW_ARRIVAL_ITEMS.length)
+		if (newArrivals.length === 0) return
+		setActiveIndex((prev) => (prev + 1) % newArrivals.length)
 	}
 
 	const handlePrev = () => {
-		setActiveIndex((prev) => (prev - 1 + NEW_ARRIVAL_ITEMS.length) % NEW_ARRIVAL_ITEMS.length)
+		if (newArrivals.length === 0) return
+		setActiveIndex((prev) => (prev - 1 + newArrivals.length) % newArrivals.length)
 	}
 
 	// 2. Touch swipe gesture detection handler for mobile
@@ -115,13 +135,21 @@ const NewArrivalsCard = () => {
 		}
 	}
 
+	if(isLoading){
+		return (
+			<div className='text-center py-24 text-neutral-500 font-medium animate-pulse'>
+				Loading newest arrivals...
+			</div>
+		)
+	}
+
 	// On mobile, show only the single active item. On desktop, show 3 items.
 	const visibleItems = isMobile
-		? [{ item: NEW_ARRIVAL_ITEMS[activeIndex], pos: 0 }]
+		? [{ item: newArrivals[activeIndex], pos: 0 }]
 		: [
-			{ item: NEW_ARRIVAL_ITEMS[(activeIndex - 1 + NEW_ARRIVAL_ITEMS.length) % NEW_ARRIVAL_ITEMS.length], pos: 0 },
-			{ item: NEW_ARRIVAL_ITEMS[activeIndex], pos: 1 },
-			{ item: NEW_ARRIVAL_ITEMS[(activeIndex + 1) % NEW_ARRIVAL_ITEMS.length], pos: 2 },
+			{ item: newArrivals[(activeIndex - 1 + newArrivals.length) % newArrivals.length], pos: 0 },
+			{ item: newArrivals[activeIndex], pos: 1 },
+			{ item: newArrivals[(activeIndex + 1) % newArrivals.length], pos: 2 },
 		]
 
 	return (
