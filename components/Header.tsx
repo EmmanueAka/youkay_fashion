@@ -40,7 +40,7 @@ const Header = () => {
 					</div>
 				</div>
 				<div className='hidden sm:block'>
-					<NavItems />
+					<NavItems onNavigation={() => setToggleMenu(false)}/>
 				</div>
 				<div className='gap-6 flex items-center justify-between'>
 					<button>
