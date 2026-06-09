@@ -194,17 +194,18 @@ const Hero = () => {
 		<div className='bg-background text-on-background font-body-md overflow-x-hidden'>
 			<section className='relative h-[716px] flex items-center overflow-hidden'>
 				<div className='absolute inset-0 z-0'>
-					<img src='/benin-attire2.png' alt='benin attired' className='w-full h-full object-cover'/>
-					<div className='absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent'></div>
+					<img src='/trad-hero.png' alt='benin attired' className='w-full h-full object-cover'/>
+					<div className='absolute inset-0 bg-gradient-to-r from-background via-background/75 to-transparent'></div>
 				</div>
 				<div className='relative z-10 px-margin-desktop max-auto w-full'>
-					<div className='max-w-2xl'>
-						<div className='inline-flex items-center gap-2 px-3 py-1 rounded-full bg-tertiary-10 text-tertiary/10 mb-6'>
+					<div className='max-w-2xl space-y-6 '>
+						<div className='inline-flex items-center gap-2 px-3 py-1 rounded-full bg-tertiary/10 text-tertiary/60 mb-6'>
 							<span className='material-symbols-outlined text-[10px]' data-icon='auto_awsome'>auto_awesome</span>
 							<span className='font-label-sm text-label-sm uppercase tracking-widest'>Heritage Collections</span>
 						</div>
-						<h1 className='font-display-lg text-display-lg mb-6 '>The Soul of <span className='text-primary'>Tradition</span> </h1>
-						<p className='font-body-lg text-body-lg text-shadow-black mb-10 max-w-lg'>
+
+						<h1 className='text-[30px] sm:text-[60px] font-bold outline-white drop-shadow-xl text-on-background leading-tight'>The Soul of <span className='text-primary'>Tradition</span> </h1>
+						<p className='font-body-lg text-sm md:text-body-lg text-shadow-black mb-10 max-w-lg'>
 							Explore the intricate weaves of Kente, the regal stiffness of Aso-oke, and the rhythmic flow of Dashiki. Each stitch carries a century of storytelling and ancestral wisdom.
 						</p>
 
@@ -214,10 +215,10 @@ const Hero = () => {
 									const el = document.getElementById("collection")
 									if (el) el.scrollIntoView({behavior: 'smooth'})
 								}}
-								className='shimmer-btn heritage-gradient cursor-pointer md:px-8 px-4 rounded-full  font-title-md text-white shadow-lg hover:shadow-primary/20 transition-all'>
+								className='shimmer-btn bg-gradient-to-r from-[#a43c12] to-[#ff7f50] text-white md:px-8 px-2 md:py-4 py-1 rounded-full font-semibold sm:text-title-md text-sm shadow-xl hover:scale-105 transition-transform'>
 								View All Styles
 							</button>
-							<button className='glass-card cursor-pointer md:px-8 px-4 md:py-4 py-2 group group-hover:scale-105 rounded-full font-title-md text-primary border border-primary/20 hover:bg-white/20 transition-all'>
+							<button className='glass-card cursor-pointer md:px-8 px-2 md:py-4 py-1 group group-hover:scale-105 rounded-full font-title-md text-primary border border-primary/20 hover:bg-white/20 transition-all'>
 								Our Process
 							</button>
 						</div>
