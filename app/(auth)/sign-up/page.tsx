@@ -1,11 +1,12 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from "@/lib/supabaseClient"
 
-const CustomerSignUp = () => {
+// 1. Move all the form UI and parameters state into an inner component
+const SignUpFormContent = () => {
 	const [errorMsg, setErrorMsg] = useState<string | null>(null)
 	const [successMsg, setSuccessMsg] = useState<string | null>(null)
 	const [loading, setLoading] = useState(false)
@@ -28,7 +29,10 @@ const CustomerSignUp = () => {
 		const city = formData.get('city') as string
 		const country = formData.get('country') as string
 
-		// 1. Sign up through Supabase Auth (metadata drops down into our Postgres trigger automatically)
+		// Safely compute host origin to protect server-side prerender builds
+		const currentOrigin = typeof window !== 'undefined' ? window.location.origin : ''
+
+		// Sign up through Supabase Auth
 		const { data, error } = await supabase.auth.signUp({
 			email,
 			password,
@@ -42,7 +46,7 @@ const CustomerSignUp = () => {
 					role: 'user'
 				},
 				// Sets where users are routed after clicking their email confirmation link
-				emailRedirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`
+				emailRedirectTo: `${currentOrigin}/auth/callback?next=${encodeURIComponent(redirectTo)}`
 			}
 		})
 
@@ -52,7 +56,7 @@ const CustomerSignUp = () => {
 			return
 		}
 
-		// 2. Check if verification is active on your Supabase instance
+		// Check if verification is active on your Supabase instance
 		if (data.user && data.session === null) {
 			setSuccessMsg("Registration initiated! Please check your email inbox to confirm your account and complete checkout.");
 			setLoading(false)
@@ -167,4 +171,11 @@ const CustomerSignUp = () => {
 	)
 }
 
-export default CustomerSignUp
+// 2. Export the parent wrapper with Suspense handling the hooks extraction
+export default function CustomerSignUp() {
+	return (
+		<Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading registration layout...</div>}>
+			<SignUpFormContent />
+		</Suspense>
+	)
+}
