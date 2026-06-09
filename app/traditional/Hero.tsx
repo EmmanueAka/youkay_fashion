@@ -1,9 +1,12 @@
+'use client'
+
 import React, {useEffect, useState} from 'react'
 import Footer from "@/components/Footer";
 import {useCart} from "@/app/context/CartContext";
 import {supabase} from "@/lib/supabaseClient";
 import {useQuery} from "@tanstack/react-query";
 import Link from "next/link";
+import {motion} from "framer-motion";
 
 
 const ITEMS_PER_PAGE = 4;
@@ -192,7 +195,7 @@ const Hero = () => {
 			<section className='relative h-[716px] flex items-center overflow-hidden'>
 				<div className='absolute inset-0 z-0'>
 					<img src='/benin-attire2.png' alt='benin attired' className='w-full h-full object-cover'/>
-					<div className='absolute inset-0 bg-gradient-to-r from-background via-background/40 to-transparent'></div>
+					<div className='absolute inset-0 bg-gradient-to-r from-background via-background/60 to-transparent'></div>
 				</div>
 				<div className='relative z-10 px-margin-desktop max-auto w-full'>
 					<div className='max-w-2xl'>
@@ -201,22 +204,29 @@ const Hero = () => {
 							<span className='font-label-sm text-label-sm uppercase tracking-widest'>Heritage Collections</span>
 						</div>
 						<h1 className='font-display-lg text-display-lg mb-6 '>The Soul of <span className='text-primary'>Tradition</span> </h1>
-						<p className='font-body-lg text-body-lg text-on-surface-variant mb-10 max-w-lg'>
+						<p className='font-body-lg text-body-lg text-shadow-black mb-10 max-w-lg'>
 							Explore the intricate weaves of Kente, the regal stiffness of Aso-oke, and the rhythmic flow of Dashiki. Each stitch carries a century of storytelling and ancestral wisdom.
 						</p>
 
 						<div className='flex gap-4'>
-							<button className='shimmer-btn heritage-gradient cursor-pointer px-8 rounded-full  font-title-md text-white shadow-lg hover:shadow-primary/20 transition-all'>
+							<button
+								onClick={() => {
+									const el = document.getElementById("collection")
+									if (el) el.scrollIntoView({behavior: 'smooth'})
+								}}
+								className='shimmer-btn heritage-gradient cursor-pointer md:px-8 px-4 rounded-full  font-title-md text-white shadow-lg hover:shadow-primary/20 transition-all'>
 								View All Styles
 							</button>
-							<button className='glass-card cursor-pointer px-8 py-4 group group-hover:scale-105 rounded-full font-title-md text-primary border border-primary/20 hover:bg-white/20 transition-all'>
+							<button className='glass-card cursor-pointer md:px-8 px-4 md:py-4 py-2 group group-hover:scale-105 rounded-full font-title-md text-primary border border-primary/20 hover:bg-white/20 transition-all'>
 								Our Process
 							</button>
 						</div>
 					</div>
 				</div>
 			</section>
-			<section className='py-24 px-margin-desktop max-w-container mx-auto'>
+			<section
+
+				className='py-24 px-margin-desktop max-w-container mx-auto'>
 				<div className='flex flex-col md:flex-row justify-between items-end mb-16 gap-6'>
 					<div className='max-w-xl'>
 						<h2 className='font-headline-lg text-headline-lg mb-4'>Fabric Legacies</h2>
@@ -244,7 +254,11 @@ const Hero = () => {
 					<div className='grid gird-cols-1 md:grid-cols-12 gap-gutter'>
 
 						{mainProduct && (
-							<div className='md:col-span-7 group relative overflow-hidden roundex-xl h-[500px] shadow-sm'>
+							<motion.div
+								initial={{opacity:0, x: 75}}
+								whileInView={{opacity: 1, x: 0}}
+								transition={{ duration: 0.6, ease: "easeInOut"}}
+								className='md:col-span-7 group relative overflow-hidden roundex-xl h-[500px] shadow-sm'>
 								{renderTag(mainProduct.tags)}
 								<img key={mainProduct.id} src={mainProduct.image_url} alt={mainProduct.name} className='w-full h-full object-cover transition-transform druation-700 group-hover:scale-110 '/>
 								<div className='absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent'></div>
@@ -279,9 +293,13 @@ const Hero = () => {
 									</div>
 
 								</div>
-							</div>
+							</motion.div>
 						)}
-						<div className='md:col-span-5 group relative overflow-hidden rounded-xl h-[500px] shadow-sm'>
+						<motion.div
+							initial={{opacity:0, x: -75}}
+							whileInView={{opacity: 1, x: 0}}
+							transition={{ duration: 0.6, ease: "easeInOut"}}
+							className='md:col-span-5 group relative overflow-hidden rounded-xl h-[500px] shadow-sm'>
 							<img src='/trad.png' alt='traditional attire' className='w-full h-full object-cover transition-transoform duration-700 group-hover:scale-110'/>
 							<div className='absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent'></div>
 							<div className='absolute bottom-0 left-0 right-0 p-4 glass-card m-6 rounded-lg'>
@@ -289,17 +307,21 @@ const Hero = () => {
 								<h3 className='font-headline-lg text-headline-lg text mb-2 '>Aso-Oke Silk</h3>
 								<p className='text-white/80 font-body-md'>The 'Top Cloth' of the Yoruba, known for its prestige and structural elegance.</p>
 							</div>
-						</div>
+						</motion.div>
 						<div>
 						</div>
 					</div>
 				)}
 
 			</section>
-			<section className='py-24 bg-surface-container-low'>
+			<section id="collection" className='py-24 bg-surface-container-low'>
 				<div className='px-margin-desktop max-w-container-max mx-auto'>
-					<div className='flex justify-between items-center mb-16'>
-						<h2 className='font-display-lg text-display-lg'>The Collection</h2>
+					<motion.div
+						initial={{opacity:0, y: 50}}
+						whileInView={{opacity: 1, y: 0}}
+						transition={{ duration: 0.6, ease: "easeInOut"}}
+						className='flex justify-between items-center mb-16'>
+						<h2 className='sm:font-display-lg sm:text-display-lg font-bold text-xl'>The Collection</h2>
 
 						<div className='flex items-center gap-4 min-w-[200px]'>
 							<label htmlFor='sortProducts' className='sr-only'>Sort Products</label>
@@ -316,7 +338,7 @@ const Hero = () => {
 								))}
 							</select>
 						</div>
-					</div>
+					</motion.div>
 				</div>
 
 				<div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter px-6'>
@@ -326,14 +348,20 @@ const Hero = () => {
 						<div className="col-span-full text-center py-10 text-on-surface-variant">No items found in this collection.</div>
 					) : (
 						products.map((product) => (
-							<Link href={`/products/${product.id}`} key={product.id} className='group flex flex-col justify-between h-full'>
+							<div  key={product.id} className='group flex flex-col justify-between h-full'>
 								<div>
-									<div className='relative aspect-[3/4] overflow-hidden rounded-xl mb-4 shadow-sm bg-surface-container-high'>
+									<motion.div
+										initial={{opacity: 0, y:75}}
+										whileInView={{opacity: 1, y:0}}
+										transition={{ duration: 0.6, ease: "easeInOut"}}
+										className='relative aspect-[3/4] overflow-hidden rounded-xl mb-4 shadow-sm bg-surface-container-high'>
+										<Link href={`/products/${product.id}`} className='aspect-[3/4] relative'>
 										<img
 											src={product.image_url || "/fallback-product.png"}
 											alt={product.name}
 											className='w-full h-full object-cover transition-transform duration-700 group-hover:scale-105'
 										/>
+										</Link>
 
 										{renderTag(product.tag || product.tags)}
 
@@ -343,7 +371,7 @@ const Hero = () => {
 										>
 											<span className='material-symbols-outlined' data-icon='shopping_bag'>shopping_bag</span>
 										</button>
-									</div>
+									</motion.div>
 
 									<h4 className='font-title-md text-title-md mb-1'>{product.name}</h4>
 									<p className='text-primary font-bold mb-2'>${Number(product.price).toFixed(2)}</p>
@@ -399,7 +427,7 @@ const Hero = () => {
 										</div>
 									)
 								})()}
-							</Link>
+							</div>
 						))
 					)}
 				</div>
@@ -419,6 +447,7 @@ const Hero = () => {
 
 			</section>
 			<section className='py-32 bg-background overflow-hidden relative'>
+
 				<div className='absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none'>
 					<div className='grid grid-cols-6 h-full'>
 						<div className='border-r border-primary'></div>
@@ -428,7 +457,11 @@ const Hero = () => {
 						<div className='border-r border-primary'></div>
 					</div>
 				</div>
-				<div className='px-margin-desktop max-w-container-max mx-auto text-center relative z-10'>
+				<motion.div
+					initial={{opacity: 0, scaleX: 0.9}}
+					whileInView={{opacity:1, scaleX: 1}}
+					transition={{ duration: 0.6, ease: "easeOut"}}
+					className='px-margin-desktop max-w-container-max mx-auto text-center relative z-10'>
 					<span className='material-symbols-outlined text-primary text-5xl mb-8' data-icon="format_quote"
 					      style={{fontVariationSettings: "'FILL' 1"}}>format_quote</span>
 					<blockquote className='font-display-lg text-display-lg mb-8 max-w-4xl mx-auto leading-tight'>
@@ -436,7 +469,7 @@ const Hero = () => {
 						className="text-primary italic">heritage</span> that defines a continent's future."
 					</blockquote>
 					<cite className="font-label-sm text-label-sm text-on-surface-variant tracking-[0.2em] uppercase">Eucharia Chikwado, Master Weaver</cite>
-				</div>
+				</motion.div>
 			</section>
 			<Footer/>
 		</div>

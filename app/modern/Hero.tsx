@@ -20,7 +20,12 @@ const Hero = () => {
 							Where the rhythmic patterns of the past meet the precise silhouettes of tomorrow. Discover our curated collection of contemporary pieces honoring heritage through craft.
 						</p>
 						<div className='flex gap-4'>
-							<button className='shimmer-btn cursor-pointer hover:text-white hover:bg-gradient-to-r hover:from-primary hover:to-primary-container px-8 py-4 rounded-full font-title-md text-title-md shadow-lg shadow-primary/20 transition-transform hover:scale-105 duration-300'>
+							<button
+								onClick={() => {
+									const el = document.getElementById("collection")
+									if(el) el.scrollIntoView({behavior: 'smooth'})
+								}}
+								className='shimmer-btn cursor-pointer hover:text-white hover:bg-gradient-to-r hover:from-primary hover:to-primary-container px-8 py-4 rounded-full font-title-md text-title-md shadow-lg shadow-primary/20 transition-transform hover:scale-105 duration-300'>
 								Explore Collection
 							</button>
 						</div>

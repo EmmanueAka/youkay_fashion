@@ -1,7 +1,6 @@
 'use client'
 
 import React from 'react'
-import {useRouter} from "next/navigation";
 
 const Hero = () => {
 
@@ -12,7 +11,7 @@ const Hero = () => {
 				<div className='absolute inset-0 bg-gradient-to-r from-white/80 to-transparent'></div>
 			</div>
 			<div className='relative z-10 h-full flex flex-col justify-center items-start px-margin-desktop max-w-auto'>
-				<div className='max-w-4xl space-y-12 animate-fade-in-up'>
+				<div className='md:max-w-4xl max-w-auto lg:space-y-12 md:space-y-8 space-y-8 animate-fade-in-up'>
 					<span className='inline-block border px-2 font-[var(--font-inter) font-bold] py-1 rounded-full  text-label-sm tracking-widest uppercase'>
 						New Era Fashion
 					</span>

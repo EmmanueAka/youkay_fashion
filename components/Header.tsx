@@ -1,7 +1,6 @@
 'use client'
 
 import React, {useEffect, useState} from 'react'
-import {useRouter} from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import NavItems from "@/components/NavItems";
@@ -23,6 +22,10 @@ const Header = () => {
 
 	const totalItems = mounted ? getCartCount() : 0;
 
+	const handleSearch = () => {
+
+	}
+
 	return (
 		<div className='sticky top-0 w-full px-6 bg-white z-50'>
 			<div className='w-full justify-between flex items-center '>
@@ -43,9 +46,17 @@ const Header = () => {
 					<NavItems onNavigation={() => setToggleMenu(false)}/>
 				</div>
 				<div className='gap-6 flex items-center justify-between'>
-					<button>
-						<Search className='w-5 h-5 text-orange-900 cursor-pointer'/>
-					</button>
+					<div
+						className='group relative'>
+						<button className='group-hover:opacity-0'>
+							<Search className='w-5 h-5 text-orange-900 cursor-pointer'/>
+						</button>
+						<input
+							className='bg-primary focus:ring-0 text-white font-semibold focus:outline-primary max-w-4xl rounded-full px-3 py-2 shadow-sm border-2 border-white/40 absolute
+							-left-50 top-10 focus:opacity-100 group-hover:opacity-100 opacity-0 transition duration-500' type='text'
+						       placeholder='Search for apparels...'
+						/>
+					</div>
 					<div className='relative'>
 						<button onClick={() => setIsCartOpen(true)}>
 							<ShoppingCart className='w-5 h-5 text-orange-900 cursor-pointer'/>

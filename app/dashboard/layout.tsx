@@ -1,5 +1,5 @@
 import React from 'react'
-import {AuthProvider} from "@/app/dashboard/(auth)/AuthProvider";
+import {AuthProvider} from "@/app/dashboard/AuthProvider";
 
 const Layout = ({children}:{children:React.ReactNode}) => {
 	return (

@@ -1,11 +1,10 @@
 'use client'
 
 import React, {useEffect, useState} from 'react'
-import {Category} from "@/types";
 import {useCart} from "@/app/context/CartContext";
 import {supabase} from "@/lib/supabaseClient";
-import products from "@/app/dashboard/main/Products";
 import Link from "next/link";
+import {motion} from "framer-motion"
 
 
 const ITEMS_PER_PAGE = 3;
@@ -155,7 +154,7 @@ const ModernFusionProductCard = () => {
 		})
 	}
 	return (
-		<div className='md:col-span-9 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter'>
+		<div id="collection" className='md:col-span-9 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter'>
 			{loading ? (
 				<div className="col-span-full text-center py-10 text-on-surface-variant">Loading our collection...</div>
 			) : products.length === 0 ? (
@@ -163,14 +162,20 @@ const ModernFusionProductCard = () => {
 					collection.</div>
 			) : (
 				products.map((product) => (
-					<Link href={`/products/${product.id}`} key={product.id} className='group relative space-y-4 '>
+					<div key={product.id} className='group relative space-y-4 '>
 						<div>
-							<div className='aspect-[3/4] relative rounded-3xl overflow-hidden glass-panel'>
+							<motion.div
+								initial={{opacity: 0, x:50}}
+								whileInView={{opacity: 1, x:0}}
+								transition={{duration: 0.6, ease: "easeIn"}}
+								className='aspect-[3/4] relative rounded-3xl overflow-hidden glass-panel'>
+								<Link href={`/products/${product.id}`}>
 								<img
 									className='w-full h-full object-cover transition-transform duration-700 group-hover:scale-110'
 									alt={product.name}
 									src={product.image_url}
 								/>
+								</Link>
 								<div
 									className='absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity'></div>
 								<div
@@ -182,7 +187,7 @@ const ModernFusionProductCard = () => {
 									</button>
 								</div>
 								{renderTag(product.tag || product.tags)}
-							</div>
+							</motion.div>
 							<div className='flex justify-between item-start'>
 								<div>
 									<h4 className='font-title-md text-title-md text-on-background'>{product.name}</h4>
@@ -217,7 +222,7 @@ const ModernFusionProductCard = () => {
 							</div>
 						)}
 
-					</Link>
+					</div>
 				)))}
 
 

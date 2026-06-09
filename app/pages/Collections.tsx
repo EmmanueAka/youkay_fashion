@@ -1,7 +1,9 @@
+'use client'
 import React from 'react'
 import {ArrowRight} from "lucide-react";
 import CollectionCards from "@/components/CollectionCards";
 import NewArrivalsCard from "@/components/NewArrivalsCard";
+import {motion} from "framer-motion";
 
 const Collections = () => {
 	return (
@@ -9,14 +11,28 @@ const Collections = () => {
 			<div className='px-12 mt-6'>
 				<div className='w-full flex justify-between'>
 					<div>
-						<h1 className='text-4xl mb-base mt-12'>Curated Collections</h1>
-						<p className='max-w-xl mt-4'>Browse through our signature aesthetics designed for the modern connoisseur</p>
+						<motion.h1
+							initial={{opacity: 0, x: 50}}
+							whileInView={{opacity: 1, x: 0}}
+							transition={{duration: 0.5, ease: "easeOut"}}
+							className='text-4xl mb-base mt-12'>Curated Collections</motion.h1>
+						<motion.p
+							initial={{opacity: 0, y: 50}}
+							whileInView={{opacity: 1, y: 0}}
+							transition={{duration: 0.5, ease: "easeOut"}}
+							className='max-w-xl mt-4'>Browse through our signature aesthetics designed for the modern connoisseur</motion.p>
 					</div>
-					<div className='flex items-end'>
-						<button className='flex items-center justify-center primary-text'>
+					<div
+
+						className='flex items-end'>
+						<motion.button
+							initial={{opacity: 0, y: -50}}
+							whileInView={{opacity: 1, y: 0}}
+							transition={{duration: 0.6, ease: "easeOut"}}
+							className='flex items-center justify-center primary-text'>
 							View all categories
 							<ArrowRight className='size-5' />
-						</button>
+						</motion.button>
 					</div>
 				</div>
 					<CollectionCards />

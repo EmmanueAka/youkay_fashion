@@ -6,7 +6,7 @@ import Customers from "@/app/dashboard/main/Customers";
 import Orders from "@/app/dashboard/main/Orders";
 import Products from "@/app/dashboard/main/Products";
 import Analytics from "@/app/dashboard/main/Analytics";
-import {useAuth} from "@/app/dashboard/(auth)/AuthProvider";
+import {useAuth} from "@/app/dashboard/AuthProvider";
 
 const Page = () => {
 	const [activePage, setActivePage] = useState('Dashboard')
