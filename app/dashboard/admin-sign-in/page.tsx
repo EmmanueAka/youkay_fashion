@@ -1,6 +1,6 @@
 'use client'
 export const dynamic = 'force-dynamic'
-import React, {useState, Suspense} from 'react'
+import React, {useState} from 'react'
 import {useSupabase} from "@/app/dashboard/SupabaseProvider";
 import {useRouter} from "next/navigation";
 
@@ -50,7 +50,6 @@ const Page = () => {
 	}
 
 	return (
-		<Suspense fallback={<div>Loading Dashboard Authentication Layout...</div>}>
 		<div
 			className='bg-background min-h-screen flex items-center justify-center arch-texture relative overflow-hidden'>
 			<div className='absolute top-[-10%] left-[-10%]  w-[40%] h-[40%] rounded-full bg-secondary-container/10 blur-[120px]'></div>
@@ -143,7 +142,7 @@ const Page = () => {
 
 			</main>
 		</div>
-		</Suspense>
+
 	)
 }
 export default Page
