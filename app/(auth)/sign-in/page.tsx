@@ -1,12 +1,12 @@
 'use client'
-export const dynamic = 'force-dynamic'
+
 import React, { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from "@/lib/supabaseClient"
 
-
-const CustomerSignIn = () => {
+// 1. Move your main form logic into a sub-component that safely uses the hook
+const SignInFormContent = () => {
 	const [errorMsg, setErrorMsg] = useState<string | null>(null)
 	const [loading, setLoading] = useState(false)
 	const router = useRouter()
@@ -62,7 +62,6 @@ const CustomerSignIn = () => {
 	}
 
 	return (
-		<Suspense fallback={<div>Loading authentication layout...</div>}>
 		<div className='bg-background min-h-screen flex items-center justify-center relative overflow-hidden px-6'>
 			<div className='absolute top-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-primary/5 blur-[120px]'></div>
 
@@ -114,8 +113,14 @@ const CustomerSignIn = () => {
 				</div>
 			</main>
 		</div>
-		</Suspense>
 	)
 }
 
-export default CustomerSignIn
+// 2. Export a main component that isolates the client logic inside Suspense
+export default function CustomerSignIn() {
+	return (
+		<Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading authentication layout...</div>}>
+			<SignInFormContent />
+		</Suspense>
+	)
+}
