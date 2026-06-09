@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 			setUser(session?.user ?? null)
 			setLoading(false)
 
-			// Optional: Refresh the page on sign-in/sign-out to sync Middleware
+			// Optional: Refresh the page on admin-sign-in/sign-out to sync Middleware
 			if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
 				router.refresh()
 			}

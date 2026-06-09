@@ -58,7 +58,7 @@ export default async function middleware(req: NextRequest) {
 	// ==========================================
 	if (pathname.startsWith("/dashboard")) {
 		// Prevent infinite loops on administrative log-in pathing
-		if (pathname === "/dashboard/sign-in") {
+		if (pathname === "/dashboard/admin-sign-in") {
 			if (user) {
 				return NextResponse.redirect(new URL('/dashboard/main', req.url));
 			}
@@ -67,7 +67,7 @@ export default async function middleware(req: NextRequest) {
 
 		// Require token verification for access to dashboard pages
 		if (!user) {
-			return NextResponse.redirect(new URL('/dashboard/sign-in', req.url));
+			return NextResponse.redirect(new URL('/dashboard/admin-sign-in', req.url));
 		}
 
 		// Pull verified role flag
@@ -81,7 +81,7 @@ export default async function middleware(req: NextRequest) {
 		if (profile?.role !== 'admin') {
 			// Sign out user locally to clear token mismatch
 			await supabase.auth.signOut();
-			return NextResponse.redirect(new URL('/dashboard/sign-in?error=unauthorized', req.url));
+			return NextResponse.redirect(new URL('/dashboard/admin-sign-in?error=unauthorized', req.url));
 		}
 
 		// Direct clean fallback route from /dashboard to /dashboard/main
