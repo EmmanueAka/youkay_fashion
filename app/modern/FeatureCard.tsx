@@ -66,10 +66,10 @@ const FeatureCard = () => {
 					</div>
 				</div>
 			</div>
-			<div className='py-32 px-margin-desktop max-w-container-max max-auto text-center'>
+			<div className='md:py-32 py-16 md:px-margin-desktop px-6 md:max-w-container-max max-auto text-center'>
 				<div className="glass-card rounded-[3rem] p-16 relative overflow-hidden">
-					<div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[100px] rounded-full"></div>
-					<div className="absolute bottom-0 left-0 w-64 h-64 bg-tertiary/5 blur-[100px] rounded-full"></div>
+					<div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 blur-[100px] rounded-full"></div>
+					<div className="absolute bottom-0 left-0 w-64 h-64 bg-tertiary/10 blur-[100px] rounded-full"></div>
 					<div className="relative z-10 max-w-xl mx-auto space-y-8">
 						<h2 className="font-headline-lg text-headline-lg">Join the Stitch Movement</h2>
 						<p className="font-body-lg text-body-lg text-on-surface-variant">Subscribe to receive early

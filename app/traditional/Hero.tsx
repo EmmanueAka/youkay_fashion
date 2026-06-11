@@ -197,7 +197,7 @@ const Hero = () => {
 					<img src='/trad-hero.png' alt='benin attired' className='w-full h-full object-cover'/>
 					<div className='absolute inset-0 bg-gradient-to-r from-background via-background/75 to-transparent'></div>
 				</div>
-				<div className='relative z-10 px-margin-desktop max-auto w-full'>
+				<div className='relative z-10 md:px-margin-desktop px-3 max-auto w-full'>
 					<div className='max-w-2xl space-y-6 '>
 						<div className='inline-flex items-center gap-2 px-3 py-1 rounded-full bg-tertiary/10 text-tertiary/60 mb-6'>
 							<span className='material-symbols-outlined text-[10px]' data-icon='auto_awsome'>auto_awesome</span>
@@ -205,11 +205,13 @@ const Hero = () => {
 						</div>
 
 						<h1 className='text-[30px] sm:text-[60px] font-bold outline-white drop-shadow-xl text-on-background leading-tight'>The Soul of <span className='text-primary'>Tradition</span> </h1>
-						<p className='font-body-lg text-sm md:text-body-lg text-shadow-black mb-10 max-w-lg'>
-							Explore the intricate weaves of Kente, the regal stiffness of Aso-oke, and the rhythmic flow of Dashiki. Each stitch carries a century of storytelling and ancestral wisdom.
-						</p>
+						<div className='w-80 md:w-full'>
+							<p className='font-body-lg text-sm md:text-body-lg text-shadow-black mb-10 max-w-lg'>
+								Explore the intricate weaves of Kente, the regal stiffness of Aso-oke, and the rhythmic flow of Dashiki. Each stitch carries a century of storytelling and ancestral wisdom.
+							</p>
+						</div>
 
-						<div className='flex gap-4'>
+						<div className='flex gap-4 mt-12 md:mt-0'>
 							<button
 								onClick={() => {
 									const el = document.getElementById("collection")
@@ -266,8 +268,8 @@ const Hero = () => {
 								<div className='absolute bottom-0 left-0 right-0 p-4 glass-card m-6 rounded-lg'>
 									<div>
 										<span className='font-label-sm text-label-sm text-secondary-container mb-2 block'>GHANA</span>
-										<h3 className='font-headline-lg text-headline-lg text-white mb-2'>{mainProduct.name}</h3>
-										<p className='text-white/80 font-body-sm'>{mainProduct.description}</p>
+										<h3 className='text-sm md:font-headline-lg font-bold md:text-headline-lg text-white mb-2'>{mainProduct.name}</h3>
+										<p className='text-white/80 md:font-body-sm text-sm'>{mainProduct.description}</p>
 
 										{/* Main Spotlight Product Cart Action Counter Panel */}
 										{(() => {
@@ -304,9 +306,9 @@ const Hero = () => {
 							<img src='/trad.png' alt='traditional attire' className='w-full h-full object-cover transition-transoform duration-700 group-hover:scale-110'/>
 							<div className='absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent'></div>
 							<div className='absolute bottom-0 left-0 right-0 p-4 glass-card m-6 rounded-lg'>
-								<span className='font-label-sm text-label-sm text-secondary mb-2 block'>NIGERIA</span>
-								<h3 className='font-headline-lg text-headline-lg text mb-2 '>Aso-Oke Silk</h3>
-								<p className='text-white/80 font-body-md'>The 'Top Cloth' of the Yoruba, known for its prestige and structural elegance.</p>
+								<span className='font-label-sm text-label-sm text-white font-bold mb-2 block'>NIGERIA</span>
+								<h3 className='md:font-headline-lg md:text-headline-lg text-sm mb-2 text-white'>Aso-Oke Silk</h3>
+								<p className='text-white/80 md:font-body-md text-sm'>The 'Top Cloth' of the Yoruba, known for its prestige and structural elegance.</p>
 							</div>
 						</motion.div>
 						<div>
@@ -322,7 +324,7 @@ const Hero = () => {
 						whileInView={{opacity: 1, y: 0}}
 						transition={{ duration: 0.6, ease: "easeInOut"}}
 						className='flex justify-between items-center mb-16'>
-						<h2 className='sm:font-display-lg sm:text-display-lg font-bold text-xl'>The Collection</h2>
+						<h2 className='sm:font-display-lg md:text-display-lg font-bold text-sm'>The Collection</h2>
 
 						<div className='flex items-center gap-4 min-w-[200px]'>
 							<label htmlFor='sortProducts' className='sr-only'>Sort Products</label>
@@ -330,10 +332,10 @@ const Hero = () => {
 								id='sortProducts'
 								value={sortBy}
 								onChange={handleSortChange}
-								className='w-full px-4 py-3 bg-transparent border border-outline-variant rounded-xl font-label-md text-on-background focus:outline-none focus:border-primary transition-all cursor-pointer'
+								className='w-full px-4 py-3 bg-transparent border border-outline-variant rounded-xl md:font-label-md text-[12px] text-on-background focus:outline-none focus:border-primary transition-all cursor-pointer'
 							>
 								{SORT_OPTIONS.map((option) => (
-									<option key={option.value} value={option.value} className='bg-background text-on-background'>
+									<option key={option.value} value={option.value} className='bg-background  text-on-background'>
 										{option.label}
 									</option>
 								))}

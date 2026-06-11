@@ -2,7 +2,6 @@
 import React, {useEffect, useState} from 'react'
 import {supabase} from "@/lib/supabaseClient";
 import {useCart} from "@/app/context/CartContext";
-
 import {motion} from 'framer-motion'
 import Link from "next/link";
 
@@ -154,10 +153,10 @@ const ProductCard = () => {
 	return (
 		<section id="collection" className='mt-12'>
 			<div className='py-12 bg-surface-container-low/30'>
-				<div className='px-margin-desktop max-w-container-max mx-auto'>
+				<div className='md:px-margin-desktop px-3 max-w-container-max mx-auto'>
 					<div className='flex justify-between items-end mb-12'>
 						<div>
-							<h2 className='font-headline-lg text-headline-lg text-on-background'>
+							<h2 className='md:font-headline-lg md:text-headline-lg text-lg font-bold text-red-800'>
 								Browse Casual Chic
 							</h2>
 							<p className='text-on-surface-variant mt-2'>Filter by style, fabric or heritage motif</p>
