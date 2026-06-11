@@ -218,7 +218,7 @@ const Hero = () => {
 								className='shimmer-btn bg-gradient-to-r from-[#a43c12] to-[#ff7f50] text-white md:px-8 px-2 md:py-4 py-1 rounded-full font-semibold sm:text-title-md text-sm shadow-xl hover:scale-105 transition-transform'>
 								View All Styles
 							</button>
-							<button className='glass-card cursor-pointer md:px-8 px-2 md:py-4 py-1 group group-hover:scale-105 rounded-full font-title-md text-primary border border-primary/20 hover:bg-white/20 transition-all'>
+							<button className='glass-card cursor-pointer md:px-8 px-2 md:py-4 py-1 group group-hover:scale-105  rounded-full font-title-md text-primary border border-primary/20 hover:bg-white/20 transition-all'>
 								Our Process
 							</button>
 						</div>
