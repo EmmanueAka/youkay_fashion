@@ -1,3 +1,5 @@
+'use client'
+
 import React from 'react'
 
 const Hero = () => {
@@ -14,10 +16,16 @@ const Hero = () => {
 			<div className='relative z-10 px-margin-desktop max-w-containter-max mx-auto pb-16 '>
 				<div className='max-w-2xl'>
 					<span className='bg-tertiary/60 text-white px-4 py-1 rounded-full font-label-sm text-label-sm inline-block mb-4 backdrop-blur-md'>Collection 2026</span>
-					<h1 className='font-display-lg text-display-lg text-white mb-6 drop-shadow-lg'>Elegant Evening</h1>
-					<p className='font-body-lg text-body-lg text-white/90 mb-8 max-w-lg drop-shadow-lg'>Where ancestral Adire craftsmanship meets the architectural precision of modern silhouettes. A symphony of hand-dyed silks and intricate lace for the contemporary matriarch.</p>
+					<h1 className='md:font-display-lg md:text-display-lg font-semibold text-xl text-white mb-6 drop-shadow-lg'>Elegant Evening</h1>
+					<p className='md:font-body-lg md:text-body-lg  text-sm text-white/90 mb-8 max-w-lg drop-shadow-lg'>Where ancestral Adire craftsmanship meets the architectural precision of modern silhouettes. A symphony of hand-dyed silks and intricate lace for the contemporary matriarch.</p>
 					<div className='flex gap-4 mb-8'>
-						<button className='shimmer-btn text-tertiary px-8 py-4 rounded-full font-title-md text-title-md shadow-xl hover:scale-105 transition-transform active:scale-95 duration-500'>View Lookbook</button>
+						<button
+							onClick={() => {
+								const el = document.getElementById('collection')
+								if (el) el.scrollIntoView({behavior: "smooth"})
+							}}
+							className='shimmer-btn text-tertiary md:px-8 md:py-4 px-4 py-2 rounded-full font-title-md text-title-md shadow-xl hover:scale-105 transition-transform active:scale-95 duration-500'>View Lookbook</button>
+						<button></button>
 					</div>
 				</div>
 			</div>

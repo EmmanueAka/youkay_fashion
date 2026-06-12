@@ -4,7 +4,7 @@ import {motion} from 'framer-motion'
 const FeatureCard = () => {
 	return (
 		<section className='py-24 bg-surface-container-lowest overflow-hidden'>
-			<div className='px-margin-desktop max-w-container-max mx-auto'>
+			<div className='md:px-margin-desktop px-6 max-w-container-max mx-auto'>
 				<div className='grid grid-cols-1 md:grid-cols-2 gap-20 items-center'>
 					<div className='relative'>
 						<div className='aspect-square rounded-[4rem] overflow-hidden rotate-3 hover:rotate-0 transition-transform duration-700'>
@@ -13,7 +13,7 @@ const FeatureCard = () => {
 							     alt='high-end environment'
 							/>
 						</div>
-						<div className='absolute -bottom-10 -right-10 glass-card p-10 rounded-3xl max-w-xs hidden md:block'>
+						<div className=' absolute md:-bottom-10 md:-right-10 glass-card p-10 rounded-3xl max-w-xs hidden md:block'>
 							<p className='font-display-lg text-display-lg text-primary leading-tight'>100%</p>
 							<p className='font-title-md text-title-md text-on-background'>Ethically Crafted Heritage Textiles</p>
 						</div>

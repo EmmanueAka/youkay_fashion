@@ -7,9 +7,9 @@ const Hero = () => {
 				<div className='absolute inset-0 z-0'>
 					<img className='w-full h-full object-cover' alt='Modern Fusion Jacket featureing intricate'
 					     src='/modern-chic.png'/>
-					<div className='absolute inset-0 bg-gradient-to-r from-background via-transparent to-transparent'></div>
+					<div className='absolute inset-0 bg-gradient-to-r from-background via-background/75 to-transparent'></div>
 				</div>
-				<div className='relative z-10 px-margin-desktop max-w-container-max mx-auto w-full'>
+				<div className='relative z-10 md:px-margin-desktop px-6 max-w-container-max mx-auto w-full'>
 					<div className='max-w-2xl space-y-6'>
 					<span className='inline-flex items-center px-4 py-1 rounded-full bg-tertiary/10 font-label-sm text-label-sm'>
 						CATEGORY: MODERN FUSION

@@ -5,7 +5,7 @@ import ModernFusionProductCard from "@/app/modern/ModernFusionProductCard";
 
 const Refine = () => {
 	return (
-		<section className='md:py-20 px-6 md:px-margin-desktop max-w-container-max mx-auto'>
+		<section className='md:py-20 px-6 md:px-margin-desktop max-w-container-max mx-auto overflow-hidden'>
 			<div className='grid grid-cols-1 md:grid-cols-12 gap-gutter'>
 				<div className='md:col-span-3 glass-panel rounded-3xl md:p-8 p-4 flex flex-col justify-between space-y-8'>
 					<div>
