@@ -189,7 +189,7 @@ const EveningCard = () => {
 
 
 	return (
-		<section id='collection' className='py-24 px-margin-desktop max-w-container mx-auto'>
+		<section id='collection' className='md:py-24 py-12 px-6 md:px-margin-desktop max-w-container mx-auto'>
 			<div className='flex justify-between items-end mb-16'>
 				<div className='flex'>
 					<h2 className='md:font-headline-lg md:text-headline-lg font-semibold text-tertiary mb-2'>The Evening Selection</h2>
