@@ -5,6 +5,7 @@ import React, {useEffect, useState} from 'react'
 import {useQuery} from "@tanstack/react-query";
 import {supabase} from "@/lib/supabaseClient";
 import {useCart} from "@/app/context/CartContext";
+import Link from "next/link";
 
 
 const ITEMS_PER_PAGE = 4;
@@ -226,62 +227,12 @@ const EveningCard = () => {
 						<div className='flex justify-between items-end'>
 						<div>
 							{renderTag(mainProduct.tag)}
-						<h3 className='font-headline-lg text-headline-lg text-primary'>{mainProduct.name}</h3>
-						<p className='font-body-md text-body-md text-on-surface-variant'>{mainProduct.description}</p>
-
-							{mainProduct.sizes && mainProduct.sizes.length > 0 && (
-								<div className='mt-2 pt-2 border-t border-outline-variant/10'>
-									<span className='text-[11px] uppercase tracking-wider text-on-surface-variant block mb-2 font-medium'>Select Size:</span>
-									<div className='flex flex-wrap gap-1.5'>
-										{mainProduct.sizes.map((size: string) => {
-											const isSelected = chosenSizes[mainProduct.id] === size;
-											return (
-												<button
-													key={size}
-													type="button"
-													onClick={() => handleSelectSize(mainProduct.id, size)}
-													className={`text-xs px-2.5 py-1 rounded border transition-all font-semibold cursor-pointer ${
-														isSelected
-															? 'bg-primary text-white border-primary shadow-sm scale-105'
-															: 'border-outline-variant text-on-surface hover:border-primary'
-													}`}
-												>
-													{size}
-												</button>
-											);
-										})}
-									</div>
-								</div>
-							)}
-							{(() => {
-								const qty = getProductQuantity(mainProduct.id);
-								if (qty === 0) return null;
-								return (
-									<div className="inline-flex items-center gap-2 mt-3 bg-white/20 backdrop-blur-md px-2 py-1 rounded border border-white/30 text-black">
-										<button
-											onClick={() => handleAdjustQuantity(mainProduct.id, qty, -1)}
-											className="w-5 h-5 flex items-center justify-center font-bold hover:bg-white/20 rounded cursor-pointer transition-colors"
-										>
-											-
-										</button>
-										<span className="text-xs font-bold tracking-wider uppercase">In Bag: {qty}</span>
-										<button
-											onClick={() => handleAdjustQuantity(mainProduct.id, qty, 1)}
-											className="w-5 h-5 flex items-center justify-center font-bold hover:bg-white/20 rounded cursor-pointer transition-colors"
-										>
-											+
-										</button>
-									</div>
-								);
-							})()}
+						<h3 className='md:font-headline-lg md:text-headline-lg text-[18px] mt-3 text-white md:text-primary'>{mainProduct.name}</h3>
+						<p className='md:font-body-md md:text-body-md text-on-surface-variant text-[12px]'>{mainProduct.description}</p>
 						</div>
 						<div className='text-right'>
-						<span className='font-title-md text-title-md text-on-background'>${Number(mainProduct.price)}</span>
-						<button
-							onClick={() => handleAddToCartWithValidation(mainProduct)}
-							className='mt-4 cursor-pointer block bg-primary text-white p-3 rounded-full hover:bg-priamry-container transition-all'>
-						<span className='material-symbols-outlined' data-icon='add_shopping_cart'>add_shopping_cart</span>
-						</button>
+						<span className='md:font-title-md md:text-title-md text-on-background text-sm font-semibold'>${Number(mainProduct.price)}</span>
+
 						</div>
 						</div>
 						</div>
@@ -291,101 +242,104 @@ const EveningCard = () => {
 				</div>
 				)}
 
+				{/*Products*/}
+				{isLoading && page === 0 ? (
+					<div className="col-span-full text-center py-10 text-on-surface-variant">Loading our collection...</div>
+				) : products.length === 0 ? (
+					<div className="col-span-full text-center py-10 text-on-surface-variant">No items found in this collection.</div>
+				) : (
+					products.map((product) => (
+						<div key={product.id}
+							className='relative group rounded-2xl overflow-hidden glass-card transition-all duration-500 hover:shadow-2xl'>
+							<div className='aspect-[3/4] overflow-hidden'>
+								<Link href={`/products/${product.id}`}>
+								<img
+									src={product.image_url}
+									alt='Detail shot of a black French lace dress'
+									className='w-full h-full object-cover transition-transform duration-700 hover:scale-110'/>
+								</Link>
+								{renderTag(product.tag || product.tags)}
+							</div>
+							<div
+								className='absolute bottom-0 left-0 w-full p-6 bg-white/40 backdrop-blur-xl border-t border-white/20'>
+								<h3 className='font-title-md text-title-md text-white mb-1'>{product.name}</h3>
+								<p className='font-label-sm text-label-sm text-on-surface-variant mb-4'>${Number(product.price).toFixed(2)}</p>
+								{product.sizes && product.sizes.length > 0 && (
+									<div className='mt-2 pt-2 border-t border-outline-variant/10 flex flex-col items-start justify-start gap-2 mb-3'>
+										<div className='flex items-center gap-3'>
+											<span className='text-[11px] uppercase tracking-wider text-on-surface-variant block mb-2 font-medium'>Select Size:</span>
+											<div className='flex flex-wrap gap-1.5'>
+												{product.sizes.map((size: string) => {
+													const isSelected = chosenSizes[product.id] === size;
+													return (
+														<button
+															key={size}
+															type="button"
+															onClick={() => handleSelectSize(product.id, size)}
+															className={`text-xs px-2.5 py-1 rounded border transition-all font-semibold cursor-pointer ${
+																isSelected
+																	? 'bg-primary text-white border-primary shadow-sm scale-105'
+																	: 'border-outline-variant text-on-surface hover:border-primary'
+															}`}
+														>
+															{size}
+														</button>
+													);
+												})}
+											</div>
+										</div>
+										<div>
+											{(() => {
+												const qty = getProductQuantity(mainProduct.id);
+												if (qty === 0) return null;
+												return (
+													<div className="inline-flex items-center gap-2 mt-3 bg-white/20 backdrop-blur-md px-2 py-1 rounded border border-white/30 text-black">
+														<button
+															onClick={() => handleAdjustQuantity(mainProduct.id, qty, -1)}
+															className="w-5 h-5 flex items-center justify-center font-bold hover:bg-white/20 rounded cursor-pointer transition-colors"
+														>
+															-
+														</button>
+														<span className="text-xs font-bold tracking-wider uppercase">In Bag: {qty}</span>
+														<button
+															onClick={() => handleAdjustQuantity(mainProduct.id, qty, 1)}
+															className="w-5 h-5 flex items-center justify-center font-bold hover:bg-white/20 rounded cursor-pointer transition-colors"
+														>
+															+
+														</button>
+													</div>
+												);
+											})()}
+										</div>
+									</div>
+								)}
+								<button
+									onClick={() => handleAddToCartWithValidation(product)}
+									className='w-full py-2 border border-white/40 text-white rounded-lg font-label-sm text-label-sm hover:bg-primary hover:text-white cursor-pointer transition-all'>Add
+									to Cart
+								</button>
+							</div>
+						</div>
+					))
+				)}
 
-				{/*	Product Card 2*/}
-				<div
-					className='relative group rounded-2xl overflow-hidden glass-card transition-all duration-500 hover:shadow-2xl'>
-					<div className='aspect-[3/4] overflow-hidden'>
-						<img
-							src='https://lh3.googleusercontent.com/aida-public/AB6AXuDzrKQUYb9jsxYGg59sa9CoD68qcSKxAhz9RBII9Pr_yilX9p5CfWf2FyqEzTxdL73m1ifsz-ZRovWcY2uEwgv6mCS6MVokDIF66Paw8j0sDHaMFEWa8N6wSyK3UzpESlmLAdjFOwjn7ciR6NN0SxMaAHupEC28f7gnT6BvBLFnc7qQRby0fDNnt3DsAEZohSPi_rcQ0limM4OY8vdb4U9wFqdawCfnMVofVPF8DbpByeXR3F7voDgC5HZKz2X4NTXIj42PyQSVmtIn'
-							alt='Detail shot of a black French lace dress'
-							className='w-full h-full object-cover transition-transform duration-700 hover:scale-110'/>
-					</div>
-					<div
-						className='absolute bottom-0 left-0 w-full p-6 bg-white/40 backdrop-blur-xl border-t border-white/20'>
-						<h3 className='font-title-md text-title-md text-white mb-1'>Midnight Lace Column</h3>
-						<p className='font-label-sm text-label-sm text-on-surface-variant mb-4'>$920</p>
-						<button
-							className='w-full py-2 border border-white/40 text-white rounded-lg font-label-sm text-label-sm hover:bg-primary hover:text-white cursor-pointer transition-all'>Add
-							to Cart
-						</button>
-					</div>
-				</div>
-
-				{/*	Product Card 3*/}
-				<div
-					className='relative group rounded-2xl overflow-hidden glass-card transition-all duration-500 hover:shadow-2xl'>
-					<div className='aspect-[3/4] overflow-hidden'>
-						<img
-							src='https://lh3.googleusercontent.com/aida-public/AB6AXuC45I6b1SAH6-ip58DJhw1euTzJq6Uc5HttEIaZJyWwYNdItxWBD8dsLdfTbHU6Jc-SpQdLC8YEgo2l6fSK7uP9Gv-qM9QPA1Nu1UyunTCvAaYCd5wVOj6abkcrIFhDLxA6LbeFutoS5E42AaVx2N1b9yhZIsh-eSarSCZwR6obkdCG8Se8ogJo_MTe-0U9m6pZXUkbl79xkuSfFADtlAG2CX4I0lMYXrzs0-KxsUJNjAacFA2qfJFSWTKUOLkUF_zCL-L28hXGAYgA'
-							className='w-full h-full object-cover transition-transform duration-700 hover:scale-110'/>
-					</div>
-					<div
-						className='absolute bottom-0 left-0 w-full p-6 bg-white/40 backdrop-blur-xl border-t border-white/20'>
-						<h3 className='font-title-md text-title-md text-white mb-1'>Ochre Silk Bodice</h3>
-						<p className='font-label-sm text-label-sm text-on-surface-variant mb-4'>$640</p>
-						<button
-							className='w-full py-2 border border-white/40 text-white rounded-lg font-label-sm text-label-sm hover:bg-primary hover:text-white cursor-pointer transition-all'>Add
-							to Cart
-						</button>
-					</div>
-				</div>
-
-				{/*	Product Card 4*/}
-				<div
-					className='relative group rounded-2xl overflow-hidden glass-card transition-all duration-500 hover:shadow-2xl'>
-					<div className='aspect-[3/4] overflow-hidden'>
-						<img
-							src='https://lh3.googleusercontent.com/aida-public/AB6AXuDOjPNZkRCPeIq4AVdh48gSwhdJIPXw416x5oWbEtxjpVZrwSVWUXbpk2hK70jvoB6quGNz09P7RVXEuBPzufjSyJUPvLERw42nVr4Eel2fE8NtiwLJcvBw6_Pvwx8agdZIISkEu16Sgo8QNoQvDfJmiRteaMadCUyEzMfx7rBlPLvH6cBL1wU96bnj7xF8CTEWusddr3iAlyEtjZiYsHYwqkVmqNiog12yOtSsWn50GFLkU9V7vyf4Q9d9AK16iRVv2zE-q7YLN0YD'
-							alt='an elegant evory silk'
-							className='w-full h-full object-cover transition-transform duration-700 hover:scale-110'/>
-					</div>
-					<div
-						className='absolute bottom-0 left-0 w-full p-6 bg-white/40 backdrop-blur-xl border-t border-white/20'>
-						<h3 className='font-title-md text-title-md text-white mb-1'>Celestial Iory Slip</h3>
-						<p className='font-label-sm text-label-sm text-on-surface-variant mb-4'>$1,100</p>
-						<button
-							className='w-full py-2 border border-white/40 text-white rounded-lg font-label-sm text-label-sm hover:bg-primary hover:text-white cursor-pointer transition-all'>Add
-							to Cart
-						</button>
-					</div>
-				</div>
-
-				{/*	Product Card 5*/}
-				<div
-					className='relative group rounded-2xl overflow-hidden glass-card transition-all duration-500 hover:shadow-2xl'>
-					<div className='aspect-[3/4] overflow-hidden'>
-						<img
-							src='https://lh3.googleusercontent.com/aida-public/AB6AXuB7lhGUh2aRqc7N7bIrlq36XT9kAoq_gJmxK0BZgiYjeKtmdOjtBBFxRPw99Q6_gLIsAYE3HeL8Ev_-qa7bkz3bGgeSp513IONnNQOYXdw2i0GUg3pLko5TdI8gSAB7NpdkBTJ8MHAm_3JZNHyajTzVeaa3va6It-lJXSVTfctGTtJoHSTzmnEtzW65dcbraQH-2eOFk74Bobiuuksk2UlH4V08asxzO7fv-2HOW7v7HqouxMeAxw0Aq0icJDiUfZqPGs-a9ySo0QmT'
-							alt='Macro detail of luxury silk fabric showing the shimm'
-							className='w-full h-full object-cover transition-transform duration-700 hover:scale-110'/>
-					</div>
-					<div
-						className='absolute bottom-0 left-0 w-full p-6 bg-white/40 backdrop-blur-xl border-t border-white/20'>
-						<h3 className='font-title-md text-title-md text-white mb-1'>Celestial Iory Slip</h3>
-						<p className='font-label-sm text-label-sm text-on-surface-variant mb-4'>$1,100</p>
-						<button
-							className='w-full py-2 border border-white/40 text-white rounded-lg font-label-sm text-label-sm hover:bg-primary hover:text-white cursor-pointer transition-all'>Add
-							to Cart
-						</button>
-					</div>
-				</div>
 			</div>
 
-			<div className="px-margin-desktop mt-6 max-w-container-max mx-auto text-center relative z-10">
-				<h2 className="font-display-lg text-display-lg text-primary mb-6">Own the Heritage.</h2>
-				<p className="font-body-lg text-body-lg text-on-surface-variant max-w-xl mx-auto mb-10">
+			<div className="md:px-margin-desktop px-6 mt-6 max-w-container-max mx-auto text-center relative z-10">
+				<h2 className="md:font-display-lg md:text-display-lg font-semibold text-primary mb-6">Own the Heritage.</h2>
+				<p className="md:font-body-lg md:text-body-lg text-on-surface-variant max-w-xl mx-auto mb-10">
 					Join our inner circle for early access to limited collections and the stories behind our master
 					weavers.
 				</p>
-				<form className="max-w-md mx-auto flex gap-4">
+				<form className="max-w-md mx-auto flex md:flex-row flex-col gap-4">
 					<input
-						className="flex-1 bg-white/40 border-none rounded-lg px-6 py-4 shadow-sm focus:ring-2 focus:ring-primary/20 transition-all"
+						className="flex-1 bg-white/40 border-none rounded-lg md:px-6 md:py-4 px-4 py-2 shadow-sm focus:ring-2 focus:ring-primary/20 transition-all"
 						placeholder="Your email address" type="email"/>
 					<button
-						className="shimmer-btn  px-8 text-black py-4 rounded-lg font-title-md text-title-md shadow-lg">Subscribe
+						className="glass-panel shimmer-btn shadow-lg hover:bg-primary text-primary hover:text-white cursor-pointer rounded-lg px-4 py-2 md:px-8 md:py-4">Subscribe
 					</button>
 				</form>
+
 			</div>
 		</section>
 	)
