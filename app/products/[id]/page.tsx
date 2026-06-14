@@ -136,7 +136,7 @@ export default function ProductDetailPage({ params }: PageProps) {
 		? product.images
 		: [product.image_url || "/fallback-product.png"];
 	return (
-		<main className="min-h-screen bg-background text-on-background px-margin-desktop py-24 max-w-container mx-auto">
+		<main className="min-h-screen bg-background text-on-background px-6 md:px-margin-desktop py-24 max-w-container mx-auto">
 			{/* Core Product Presentation Section */}
 			<div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-32">
 
@@ -175,11 +175,11 @@ export default function ProductDetailPage({ params }: PageProps) {
 				{/* Product Narrative Information Panel */}
 				<div className="flex flex-col justify-center space-y-6">
 					<div>
-						<h1 className="font-display-lg text-display-lg text-on-background mb-1">{product.name}</h1>
+						<h1 className="md:font-display-lg md:text-display-lg text-lg font-semibold text-on-background mb-1">{product.name}</h1>
 						<p className="font-body-md text-body-md text-on-surface-variant">Heritage Series</p>
 					</div>
 					<p className="font-title-lg text-title-lg text-primary">${Number(product.price).toFixed(2)}</p>
-					<p className="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">{product.description}</p>
+					<p className="md:font-body-lg md:text-body-lg text-on-surface-variant leading-relaxed">{product.description}</p>
 
 					{product.sizes && Array.isArray(product.sizes) && product.sizes.length > 0 && (
 						<div className="pt-2 border-t border-outline-variant/10">
@@ -234,14 +234,14 @@ export default function ProductDetailPage({ params }: PageProps) {
 					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
 						{relatedProducts.map((item) => (
 							<Link key={item.id} href={`/products/${item.id}`} className="group block space-y-3">
-								<div className="aspect-[3/4] relative rounded-2xl overflow-hidden bg-surface-container-high shadow-sm">
+								<div className="h-34 w-24 md:h-64 md:w-44 relative rounded-2xl overflow-hidden bg-surface-container-high shadow-sm">
 									<img
 										src={item.image_url || "/fallback-product.png"}
 										alt={item.name}
 										className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
 									/>
 								</div>
-								<div className="flex justify-between items-start px-1">
+								<div className="flex  justify-between items-start px-1">
 									<div>
 										<h4 className="font-title-sm text-sm text-on-background font-bold group-hover:text-primary transition-colors line-clamp-1">{item.name}</h4>
 										<p className="text-xs text-on-surface-variant">Heritage Series</p>

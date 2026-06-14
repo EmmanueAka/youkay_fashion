@@ -60,3 +60,16 @@ export interface CustomerProfile {
 	total_orders: number;
 	last_active: string;
 }
+
+export interface Product {
+	id: string
+	name: string
+	description: string | null;
+	price: number
+	sizes: string[] | null;
+	image_url: string | null;
+	stock: number;
+	category_id: number | null;
+	tag: string | null;
+	images: string[]
+}

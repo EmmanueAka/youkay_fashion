@@ -76,14 +76,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode}> = ({ children}
 	};
 
 	const removeFromCart = (productId: string, size?: string) => {
-		setCart((prev) =>
-			prev.map((item) => {
-				if (item.id === productId && item.selectedSize === size) {
-					return { ...item, quantity: item.quantity - 1 };
-				}
-				return item;
-			}).filter((item) => item.quantity > 0)
-		);
+		setCart((prev) => prev.filter((item) => !(item.id === productId && item.selectedSize === size )))
 	};
 
 	const updateCartQuantity = (productId: string,  quantity: number, size: string | undefined,) => {

@@ -149,7 +149,7 @@ const Products = () => {
 	const totalArtifactsCount = products.reduce((acc, curr) => acc + (curr.stock || 0), 0)
 	return (
 		<div>
-				<div className='w-full flex items-center justify-between px-4 relative'>
+				<div className='w-full  flex items-center justify-between px-4 relative'>
 					{showModal && (<ProductUploadModal onClose={() => setShowModal(false)}/>)}
 					<div>
 						<h2 className='font-bold text-primary text-[36px]'>Product Inventory</h2>
@@ -201,7 +201,7 @@ const Products = () => {
 					</div>
 				</div>
 			<section
-				className='glass-panel px-4 rounded-xl overflow-y-auto scrollbar-hide-default border border-white/20 '>
+				className='glass-panel  overflow-y-auto scrollbar-hide-default px-4 rounded-xl border border-white/20 '>
 				<div className='overflow-x-auto'>
 					<table className='w-full border-collapse text-left'>
 						<thead>

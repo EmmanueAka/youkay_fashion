@@ -158,48 +158,59 @@ const ModernFusionProductCard = () => {
 			{loading ? (
 				<div className="col-span-full text-center py-10 text-on-surface-variant">Loading our collection...</div>
 			) : products.length === 0 ? (
-				<div className="col-span-full text-center py-10 text-on-surface-variant">No items found in this
-					collection.</div>
+				<div className="col-span-full text-center py-10 text-on-surface-variant">No items found in this collection.</div>
 			) : (
 				products.map((product) => (
-					<div key={product.id} className='group relative space-y-4 '>
-						<div>
-							<motion.div
-								initial={{opacity: 0, x:50}}
-								whileInView={{opacity: 1, x:0}}
-								transition={{duration: 0.6, ease: "easeIn"}}
-								className='aspect-[3/4] relative rounded-3xl overflow-hidden glass-panel'>
-								<Link href={`/products/${product.id}`}>
-								<img
-									className='w-full h-full object-cover transition-transform duration-700 group-hover:scale-110'
-									alt={product.name}
-									src={product.image_url}
-								/>
-								</Link>
-								<div
-									className='absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity'></div>
-								<div
-									className='absolute bottom-4 right-4 left-4 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all'>
-									<button
-										onClick={() => handleAddToCartWithValidation(product)}
-										className='w-full py-3 bg-surface/90 backdrop-blur-md rounded-xl text-on-primary cursor-pointer font-title-md text-title-md shadow-xl'>Quick
-										Add
-									</button>
-								</div>
-								{renderTag(product.tag || product.tags)}
-							</motion.div>
-							<div className='flex justify-between item-start'>
-								<div>
-									<h4 className='font-title-md text-title-md text-on-background'>{product.name}</h4>
-									<p className='font-body-md text-body-md text-on-surface-variant'>Heritage Series</p>
-								</div>
-								<p className='font-title-md text-title-md text-primary'>${Number(product.price).toFixed(2)}</p>
+					<div key={product.id} className='group relative space-y-4'>
+
+						{/* FIX 1: Wrap the entire card container in the Link */}
+						<Link href={`/products/${product.id}`} className='block relative rounded-3xl overflow-hidden aspect-[3/4] glass-panel cursor-pointer'>
+
+							{/* Product Image */}
+							<img
+								className='w-full h-full object-cover transition-transform duration-700 group-hover:scale-110'
+								alt={product.name}
+								src={product.image_url}
+							/>
+
+							{/* Hover Visual Overlay */}
+							<div className='absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity z-10'></div>
+
+							{/* Visual Tag */}
+							{renderTag(product.tag || product.tags)}
+
+							{/* FIX 2: Wrapper for Quick Add button with isolation logic */}
+							<div
+								className='absolute bottom-4 right-4 left-4 translate-y-4 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all z-30'
+								onClick={(e) => {
+									// Prevents clicking Quick Add from launching the product page link
+									e.preventDefault();
+									e.stopPropagation();
+								}}
+							>
+								<button
+									type="button"
+									onClick={() => handleAddToCartWithValidation(product)}
+									className='w-full py-3 bg-surface/90 backdrop-blur-md rounded-xl text-on-primary cursor-pointer font-title-md text-title-md shadow-xl'
+								>
+									Quick Add
+								</button>
 							</div>
+						</Link>
+
+						{/* Product Details info (Name & Price) */}
+						<div className='flex justify-between item-start'>
+							<div>
+								<h4 className='font-title-md text-title-md text-on-background'>{product.name}</h4>
+								<p className='font-body-md text-body-md text-on-surface-variant'>Heritage Series</p>
+							</div>
+							<p className='font-title-md text-title-md text-primary'>${Number(product.price).toFixed(2)}</p>
 						</div>
+
+						{/* Sizes selection buttons */}
 						{product.sizes && Array.isArray(product.sizes) && product.sizes.length > 0 && (
 							<div className='mt-2 pt-2 border-t border-outline-variant/10'>
-								<span
-									className='text-[11px] uppercase tracking-wider text-on-surface-variant block mb-2 font-medium'>Select Size:</span>
+								<span className='text-[11px] uppercase tracking-wider text-on-surface-variant block mb-2 font-medium'>Select Size:</span>
 								<div className='flex flex-wrap gap-1.5'>
 									{product.sizes.map((size: string) => {
 										const isSelected = chosenSizes[product.id] === size;
@@ -223,9 +234,8 @@ const ModernFusionProductCard = () => {
 						)}
 
 					</div>
-				)))}
-
-
+				))
+			)}
 		</div>
 	)
 }

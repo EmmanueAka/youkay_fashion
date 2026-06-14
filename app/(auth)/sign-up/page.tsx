@@ -5,14 +5,53 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { supabase } from "@/lib/supabaseClient"
 
-// 1. Move all the form UI and parameters state into an inner component
 const SignUpFormContent = () => {
 	const [errorMsg, setErrorMsg] = useState<string | null>(null)
 	const [successMsg, setSuccessMsg] = useState<string | null>(null)
 	const [loading, setLoading] = useState(false)
 	const searchParams = useSearchParams()
 
+	// Profile Address State (Mapped to public.profiles)
+	const [address, setAddress] = useState('')
+	const [city, setCity] = useState('')
+	const [country, setCountry] = useState('')
+
+	// Sync Checkbox State
+	const [isSameAddress, setIsSameAddress] = useState(true)
+
+	// Shipping Address State (Mapped to public.addresses)
+	const [shippingAddress, setShippingAddress] = useState('')
+	const [shippingCity, setShippingCity] = useState('')
+	const [shippingState, setShippingState] = useState('')
+	const [shippingPostal, setShippingPostal] = useState('')
+
 	const redirectTo = searchParams.get('redirect') || '/'
+
+	// Dynamically sync fields to shipping variables if checked
+	const handleProfileAddressChange = (type: 'addr' | 'city' | 'ctry', val: string) => {
+		if (type === 'addr') {
+			setAddress(val)
+			if (isSameAddress) setShippingAddress(val)
+		} else if (type === 'city') {
+			setCity(val)
+			if (isSameAddress) {
+				setShippingCity(val)
+				setShippingState(val) // Fallback proxy matching your schema layouts
+			}
+		} else if (type === 'ctry') {
+			setCountry(val)
+		}
+	}
+
+	// Toggle handler syncing current profile variables down to individual shipping variables
+	const handleCheckBoxToggle = (checked: boolean) => {
+		setIsSameAddress(checked)
+		if (checked) {
+			setShippingAddress(address)
+			setShippingCity(city)
+			setShippingState(city)
+		}
+	}
 
 	const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault()
@@ -25,47 +64,77 @@ const SignUpFormContent = () => {
 		const email = formData.get('email') as string
 		const password = formData.get('password') as string
 		const phone = formData.get('phone') as string
-		const address = formData.get('address') as string
-		const city = formData.get('city') as string
-		const country = formData.get('country') as string
 
-		// Safely compute host origin to protect server-side prerender builds
 		const currentOrigin = typeof window !== 'undefined' ? window.location.origin : ''
 
-		// Sign up through Supabase Auth
-		const { data, error } = await supabase.auth.signUp({
+		// Step 1: Sign up through Supabase Auth
+		const { data: authData, error: authError } = await supabase.auth.signUp({
 			email,
 			password,
 			options: {
-				data: {
-					full_name: name,
-					phone: phone,
-					address: address,
-					city: city,
-					country: country,
-					role: 'user'
-				},
-				// Sets where users are routed after clicking their email confirmation link
 				emailRedirectTo: `${currentOrigin}/auth/callback?next=${encodeURIComponent(redirectTo)}`
 			}
 		})
 
-		if (error) {
-			setErrorMsg(error.message)
+		if (authError) {
+			setErrorMsg(authError.message)
 			setLoading(false)
 			return
 		}
 
-		// Check if verification is active on your Supabase instance
-		if (data.user && data.session === null) {
-			setSuccessMsg("Registration initiated! Please check your email inbox to confirm your account and complete checkout.");
+		const user = authData?.user
+		if (!user) {
+			setErrorMsg("An unexpected registration error occurred. Please try again.")
+			setLoading(false)
+			return
+		}
+
+		// Step 2: Insert into public.profiles (Note: Skip if you have a database trigger running on auth.users)
+		const { error: profileError } = await supabase
+			.from('profiles')
+			.insert([{
+				id: user.id,
+				full_name: name,
+				email: email,
+				phone: phone,
+				address: address,
+				city: city,
+				country: country,
+				role: 'user'
+			}])
+
+		if (profileError) {
+			setErrorMsg(`Profile Creation Error: ${profileError.message}`)
+			setLoading(false)
+			return
+		}
+
+		// Step 3: Insert Shipping Record into public.addresses
+		const { error: addressError } = await supabase
+			.from('addresses')
+			.insert([{
+				user_id: user.id,
+				address_line: isSameAddress ? address : shippingAddress,
+				city: isSameAddress ? city : shippingCity,
+				state: isSameAddress ? city : shippingState,
+				postal_code: isSameAddress ? (shippingPostal || null) : (shippingPostal || null),
+				is_default: true
+			}])
+
+		if (addressError) {
+			setErrorMsg(`Address Setup Error: ${addressError.message}`)
+			setLoading(false)
+			return
+		}
+
+		// Step 4: Handle validation redirect routing states
+		if (authData.session === null) {
+			setSuccessMsg("Registration successful! Please check your email inbox to confirm your account.");
 			setLoading(false)
 		} else {
-			// If auto-confirm is enabled on the server, redirect them immediately
 			window.location.href = redirectTo;
 		}
 	}
-
 	return (
 		<div className='bg-background min-h-screen flex items-center justify-center relative overflow-hidden px-6 py-12'>
 			<div className='absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-secondary/5 blur-[120px]'></div>
@@ -74,7 +143,7 @@ const SignUpFormContent = () => {
 				<div className='glass-card rounded-2xl border border-outline-variant/20 p-8 shadow-md bg-white/80 backdrop-blur-md'>
 					<div className='mb-6 text-center'>
 						<h1 className='font-display-md text-headline-md text-primary mb-1'>Create Account</h1>
-						<p className='font-body-md text-on-surface-variant text-sm'>Enter shipping details to process your heritage orders</p>
+						<p className='font-body-md text-on-surface-variant text-sm'>Enter details to process your heritage orders</p>
 					</div>
 
 					{successMsg ? (
@@ -87,6 +156,7 @@ const SignUpFormContent = () => {
 						</div>
 					) : (
 						<form className="space-y-4" onSubmit={handleSubmit}>
+							{/* Personal Credentials */}
 							<div className="space-y-1">
 								<label className="font-label-sm text-xs text-on-surface font-semibold block">FULL NAME</label>
 								<input
@@ -107,7 +177,7 @@ const SignUpFormContent = () => {
 									<label className="font-label-sm text-xs text-on-surface font-semibold block">PHONE NUMBER</label>
 									<input
 										className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-2.5 px-4 text-on-background text-sm focus:outline-none focus:border-primary transition-all"
-										name="phone" placeholder="+234..." type="tel" required
+										name="phone" placeholder="+234..." type="tel"
 									/>
 								</div>
 							</div>
@@ -120,30 +190,103 @@ const SignUpFormContent = () => {
 								/>
 							</div>
 
-							<div className="space-y-1">
-								<label className="font-label-sm text-xs text-on-surface font-semibold block">STREET ADDRESS</label>
-								<input
-									className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-2.5 px-4 text-on-background text-sm focus:outline-none focus:border-primary transition-all"
-									name="address" placeholder="128 Heritage Way" type="text" required
-								/>
+							{/* Section: Profile Address */}
+							<div className="pt-2 border-t border-outline-variant/30">
+								<h2 className="text-xs font-bold text-primary tracking-wider mb-3">PROFILE ADDRESS</h2>
+
+								<div className="space-y-1 mb-3">
+									<label className="font-label-sm text-xs text-on-surface font-semibold block">STREET ADDRESS</label>
+									<input
+										className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-2.5 px-4 text-on-background text-sm focus:outline-none focus:border-primary transition-all"
+										value={address}
+										onChange={(e) => handleProfileAddressChange('addr', e.target.value)}
+										placeholder="128 Heritage Way" type="text" required
+									/>
+								</div>
+
+								<div className="grid grid-cols-2 gap-4">
+									<div className="space-y-1">
+										<label className="font-label-sm text-xs text-on-surface font-semibold block">CITY / STATE</label>
+										<input
+											className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-2.5 px-4 text-on-background text-sm focus:outline-none focus:border-primary transition-all"
+											value={city}
+											onChange={(e) => handleProfileAddressChange('city', e.target.value)}
+											placeholder="Lagos" type="text" required
+										/>
+									</div>
+									<div className="space-y-1">
+										<label className="font-label-sm text-xs text-on-surface font-semibold block">COUNTRY</label>
+										<input
+											className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-2.5 px-4 text-on-background text-sm focus:outline-none focus:border-primary transition-all"
+											value={country}
+											onChange={(e) => handleProfileAddressChange('ctry', e.target.value)}
+											placeholder="Nigeria" type="text" required
+										/>
+									</div>
+								</div>
 							</div>
 
-							<div className="grid grid-cols-2 gap-4">
-								<div className="space-y-1">
-									<label className="font-label-sm text-xs text-on-surface font-semibold block">CITY / STATE</label>
-									<input
-										className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-2.5 px-4 text-on-background text-sm focus:outline-none focus:border-primary transition-all"
-										name="city" placeholder="Lagos" type="text" required
-									/>
-								</div>
-								<div className="space-y-1">
-									<label className="font-label-sm text-xs text-on-surface font-semibold block">COUNTRY</label>
-									<input
-										className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-2.5 px-4 text-on-background text-sm focus:outline-none focus:border-primary transition-all"
-										name="country" placeholder="Nigeria" type="text" required
-									/>
-								</div>
+							{/* Address Sync Toggle */}
+							<div className="flex items-center space-x-2 py-2 select-none">
+								<input
+									type="checkbox"
+									id="sameAddressToggle"
+									checked={isSameAddress}
+									onChange={(e) => handleCheckBoxToggle(e.target.checked)}
+									className="w-4 h-4 rounded text-primary focus:ring-primary border-outline-variant accent-primary cursor-pointer"
+								/>
+								<label htmlFor="sameAddressToggle" className="text-xs text-on-surface font-medium cursor-pointer">
+									Ship to same address
+								</label>
 							</div>
+
+							{/* Section: Shipping Address (Displays if unchecked) */}
+							{!isSameAddress && (
+								<div className="pt-2 border-t border-outline-variant/30">
+									<h2 className="text-xs font-bold text-secondary tracking-wider mb-3">SHIPPING ADDRESS</h2>
+
+									<div className="space-y-1 mb-3">
+										<label className="font-label-sm text-xs text-on-surface font-semibold block">SHIPPING STREET ADDRESS</label>
+										<input
+											className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-2.5 px-4 text-on-background text-sm focus:outline-none focus:border-primary transition-all"
+											value={shippingAddress}
+											onChange={(e) => setShippingAddress(e.target.value)}
+											placeholder="45 Delivery Ave" type="text" required={!isSameAddress}
+										/>
+									</div>
+
+									<div className="grid grid-cols-2 gap-4 mb-3">
+										<div className="space-y-1">
+											<label className="font-label-sm text-xs text-on-surface font-semibold block">CITY</label>
+											<input
+												className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-2.5 px-4 text-on-background text-sm focus:outline-none focus:border-primary transition-all"
+												value={shippingCity}
+												onChange={(e) => setShippingCity(e.target.value)}
+												placeholder="Ikeja" type="text" required={!isSameAddress}
+											/>
+										</div>
+										<div className="space-y-1">
+											<label className="font-label-sm text-xs text-on-surface font-semibold block">STATE</label>
+											<input
+												className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-2.5 px-4 text-on-background text-sm focus:outline-none focus:border-primary transition-all"
+												value={shippingState}
+												onChange={(e) => setShippingState(e.target.value)}
+												placeholder="Lagos State" type="text" required={!isSameAddress}
+											/>
+										</div>
+									</div>
+
+									<div className="space-y-1">
+										<label className="font-label-sm text-xs text-on-surface font-semibold block">POSTAL CODE (OPTIONAL)</label>
+										<input
+											className="w-full bg-surface-container-lowest border border-outline-variant rounded-xl py-2.5 px-4 text-on-background text-sm focus:outline-none focus:border-primary transition-all"
+											value={shippingPostal}
+											onChange={(e) => setShippingPostal(e.target.value)}
+											placeholder="100001" type="text"
+										/>
+									</div>
+								</div>
+							)}
 
 							{errorMsg && (
 								<div className="p-3 bg-error-container/20 border border-error/20 text-error text-xs rounded-xl text-center font-medium">
@@ -151,18 +294,14 @@ const SignUpFormContent = () => {
 								</div>
 							)}
 
-							<button type='submit' disabled={loading} className="w-full cursor-pointer py-3.5 rounded-xl font-title-md text-white bg-primary hover:bg-primary/95 shadow-md transition-all font-bold text-sm mt-2">
-								{loading ? 'Processing...' : 'Complete Account Registration'}
+							<p>Have an account already? <Link href={`/sign-in?redirect=${encodeURIComponent(redirectTo)}`} className='italic text-primary'>Sign In</Link></p>
+							<button
+								type='submit'
+								disabled={loading}
+								className='w-full bg-primary hover:bg-primary/90 text-white font-medium rounded-xl py-3 text-sm transition-all shadow-sm hover:shadow-md active:scale-[0.99] disabled:opacity-50 disabled:pointer-events-none'
+							>
+								{loading ? 'Creating Account...' : 'Register Account'}
 							</button>
-
-							<div className="text-center pt-2">
-								<p className="text-xs text-on-surface-variant">
-									Already registered?{' '}
-									<Link href={`/sign-in?redirect=${encodeURIComponent(redirectTo)}`} className="text-primary font-bold hover:underline">
-										Sign In
-									</Link>
-								</p>
-							</div>
 						</form>
 					)}
 				</div>
@@ -171,10 +310,9 @@ const SignUpFormContent = () => {
 	)
 }
 
-// 2. Export the parent wrapper with Suspense handling the hooks extraction
-export default function CustomerSignUp() {
+export default function SignUpForm() {
 	return (
-		<Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading registration layout...</div>}>
+		<Suspense fallback={<div className="min-h-screen flex items-center justify-center text-sm text-on-surface-variant">Loading...</div>}>
 			<SignUpFormContent />
 		</Suspense>
 	)
