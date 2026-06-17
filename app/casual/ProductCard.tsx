@@ -4,6 +4,7 @@ import {supabase} from "@/lib/supabaseClient";
 import {useCart} from "@/app/context/CartContext";
 import {motion} from 'framer-motion'
 import Link from "next/link";
+import {detectUserRegion, getExchangeRate, UserRegionConfig} from "@/lib/currencyService";
 
 
 const ITEMS_PER_PAGE = 4
@@ -17,8 +18,39 @@ const ProductCard = () => {
 
 
 	const [chosenSizes, setChosenSizes] = useState<Record<string, string>>({})
+	const [region, setRegion] = useState<UserRegionConfig | null>(null)
+	const [conversionRate, setConversionRate] = useState<number>(1)
 
 	const {addToCart} = useCart()
+
+
+
+
+	const BASE_DATABASE_CURRENCY = 'NGN'
+
+	useEffect(() => {
+		const initializeLocalizationPipline = async () => {
+			const detectRegion = await detectUserRegion();
+			setRegion(detectRegion);
+
+			const rate = await getExchangeRate(BASE_DATABASE_CURRENCY, detectRegion.currencyCode)
+			setConversionRate(rate)
+		}
+
+		initializeLocalizationPipline()
+	}, []);
+
+	const renderLocalizedPrice = (basePrice: number) => {
+		if(!region) return `₦${basePrice.toLocaleString()}`;
+
+		const convertedAmount = basePrice * conversionRate;
+
+		return  `${region.currencySymbol}${convertedAmount.toLocaleString(undefined, {
+			minimumFractionDigits: 2,
+			maximumFractionDigits: 2,
+		})} ${region.currencyCode}`
+	}
+
 
 	const renderTag = (rawTag: any) => {
 		if (!rawTag) return null;
@@ -207,7 +239,7 @@ const ProductCard = () => {
 					<div className='px-2'>
 					<h3 className='font-title-md text-title-md text-on-surface'>{product.name}</h3>
 					<p className='text-on-surface-variant font-label-sm text-label-sm mb-1 uppercase tracking-widest'>Heritage Cotton Mix</p>
-					<span className='text-primary font-bold text-lg'>${Number(product.price).toFixed(2)}</span>
+					<span className='text-primary font-bold text-lg'>{renderLocalizedPrice(product.price)}</span>
 					</div>
 						{product.sizes && Array.isArray(product.sizes) && product.sizes.length > 0 && (
 							<div className='mt-2 pt-2 border-t border-outline-variant/10'>

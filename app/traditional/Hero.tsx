@@ -7,6 +7,7 @@ import {supabase} from "@/lib/supabaseClient";
 import {useQuery} from "@tanstack/react-query";
 import Link from "next/link";
 import {motion} from "framer-motion";
+import {detectUserRegion, getExchangeRate, UserRegionConfig} from "@/lib/currencyService";
 
 
 const ITEMS_PER_PAGE = 4;
@@ -24,10 +25,15 @@ const Hero = () => {
 	const [hasMore, setHasMore] = useState<boolean>(true);
 	const [sortBy, setSortBy] = useState<string>('created_at_desc');
 	const [chosenSizes, setChosenSizes] = useState<Record<string, string>>({});
+	const [loading, setLoading] = useState<boolean>(true)
+	const [conversionRate, setConversionRate] = useState<number>(1)
+	const [region, setRegion] = useState<UserRegionConfig | null>(null)
 
 	// Destructure context methods (assuming standard updateCartQuantity / removeFromCart support)
-	const { addToCart, cart, updateCartQuantity, removeFromCart } = useCart();
+	const { addToCart, cart, removeFromCart } = useCart();
 
+
+	const BASE_DATABASE_CURRENCY = 'NGN'
 
 	// 1. Clean up tags defensively for display
 	const renderTag = (rawTag: any ) => {
@@ -185,6 +191,35 @@ const Hero = () => {
 			.filter(item => item.id === productId)
 			.reduce((sum, item) => sum + item.quantity, 0);
 	};
+
+	// Currency conversion Logic
+
+	useEffect(() => {
+		async function initialiseLocalizationPipeline(){
+			setLoading(true);
+
+			const detectedRegion = await detectUserRegion();
+			setRegion(detectedRegion);
+
+			const rate = await getExchangeRate(BASE_DATABASE_CURRENCY, detectedRegion.currencyCode);
+			setConversionRate(rate);
+
+			setLoading(false)
+		}
+
+		initialiseLocalizationPipeline();
+	}, []);
+
+	const renderLocalizedPrice = (basePrice: number) => {
+		if(!region) return `₦${basePrice.toLocaleString()}`;
+
+		const convertedAmount = basePrice * conversionRate;
+
+		return  `${region.currencySymbol}${convertedAmount.toLocaleString(undefined, {
+			minimumFractionDigits: 2,
+			maximumFractionDigits: 2,
+		})} ${region.currencyCode}`
+	}
 
 	// Split data elements cleanly to display highlight features apart from standard grids
 	const mainProduct = products[0];
@@ -377,7 +412,7 @@ const Hero = () => {
 									</motion.div>
 
 									<h4 className='font-title-md text-title-md mb-1'>{product.name}</h4>
-									<p className='text-primary font-bold mb-2'>${Number(product.price).toFixed(2)}</p>
+									<p className='text-primary font-bold mb-2'>{renderLocalizedPrice(product.price)}</p>
 									<p className='font-label-sm text-label-sm text-on-surface-variant mb-3 line-clamp-2'>{product.description}</p>
 								</div>
 

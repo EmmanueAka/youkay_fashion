@@ -4,6 +4,7 @@ import React, {ChangeEvent, FormEvent, useEffect, useState} from 'react'
 import {motion} from 'framer-motion'
 import {supabase} from "@/lib/supabaseClient";
 import {Category, ProductUploadModalProps} from "@/types";
+import imageCompression from "browser-image-compression";
 
 const ProductUploadModal = ({onClose, onSuccess} : ProductUploadModalProps)  => {
 	// Database and Form States
@@ -113,16 +114,28 @@ const ProductUploadModal = ({onClose, onSuccess} : ProductUploadModalProps)  => 
 		let imageUrl = ''
 		let galleryUrls: string[] = []
 
+		// Global share configuration profiles for compression engine
+
+		const compressionOptions = {
+			maxSizeMB: 1,
+			maxWidthOrHeight: 1600,
+			useWebWorker: true,
+			fileType: 'image/webp',
+			initialQuality: 0.8
+		}
+
 		try {
 			// 1. Upload primary cover view asset
 			if(imageFile){
-				const fileExt = imageFile.name.split('.').pop()
-				const fileName = `${Date.now()}-primary-${Math.random().toString(36).substring(2)}.${fileExt}`
+				console.log('Compressing main image file...')
+				const compressedMainBlob = await imageCompression(imageFile, compressionOptions)
+
+				const fileName = `${Date.now()}-primary-${Math.random().toString(36).substring(2)}.webp`
 				const filePath = `product-images/${fileName}`
 
 				const { error: uploadError } = await supabase.storage
 					.from('products')
-					.upload(filePath, imageFile, { cacheControl: '3600', upsert: false })
+					.upload(filePath, compressedMainBlob, {contentType: 'image/webp', cacheControl: '3600', upsert: false })
 
 				if(uploadError) throw uploadError
 
@@ -137,13 +150,16 @@ const ProductUploadModal = ({onClose, onSuccess} : ProductUploadModalProps)  => 
 			// 2. Concurrently upload present secondary views
 			for (let i = 0; i < galleryFiles.length; i++) {
 				const activeFile = galleryFiles[i];
+
 				if (activeFile) {
-					const ext = activeFile.name.split('.').pop()
-					const pathName = `product-images/${Date.now()}-angle-${i}-${Math.random().toString(36).substring(2)}.${ext}`
+					console.log(`Compressing gallery image at position ${i + 1}.`)
+					const compressedGalleryBlob = await imageCompression(activeFile, compressionOptions);
+
+					const pathName = `product-images/${Date.now()}-angle-${i}-${Math.random().toString(36).substring(2)}.webp`
 
 					const { error: gErr } = await supabase.storage
 						.from('products')
-						.upload(pathName, activeFile, { cacheControl: '3600', upsert: false })
+						.upload(pathName, compressedGalleryBlob, { contentType: 'image/webp', cacheControl: '3600', upsert: false })
 
 					if (gErr) throw gErr
 

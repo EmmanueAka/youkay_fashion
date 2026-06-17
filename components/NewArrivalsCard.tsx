@@ -7,6 +7,10 @@ import { NEW_ARRIVAL_ITEMS } from '@/lib/constants'
 import {ShoppingBasket, ShoppingCart} from "lucide-react";
 import {useQuery} from "@tanstack/react-query";
 import {supabase} from "@/lib/supabaseClient";
+import {detectUserRegion, getExchangeRate, UserRegionConfig} from "@/lib/currencyService";
+
+
+
 
 const cardVariants = {
 	enter: {
@@ -36,6 +40,36 @@ const Card = ({
 	positionIndex: number;
 	isMobile: boolean
 }) => {
+	const [region, setRegion] = useState<UserRegionConfig | null>(null)
+	const [conversionRate, setConversionRate] = useState<number>(1)
+
+
+
+	const BASE_DATABASE_CURRENCY = 'NGN'
+
+	useEffect(() => {
+		const initializeLocalizationPipline = async () => {
+			const detectRegion = await detectUserRegion();
+			setRegion(detectRegion);
+
+			const rate = await getExchangeRate(BASE_DATABASE_CURRENCY, detectRegion.currencyCode)
+			setConversionRate(rate)
+		}
+
+		initializeLocalizationPipline()
+	}, []);
+
+	const renderLocalizedPrice = (basePrice: number) => {
+		if(!region) return `₦${basePrice.toLocaleString()}`;
+
+		const convertedAmount = basePrice * conversionRate;
+
+		return  `${region.currencySymbol}${convertedAmount.toLocaleString(undefined, {
+			minimumFractionDigits: 2,
+			maximumFractionDigits: 2,
+		})} ${region.currencyCode}`
+	}
+
 	return (
 		<motion.div
 			custom={isActive}
@@ -77,7 +111,7 @@ const Card = ({
 							<h3 className="text-sm font-bold text-neutral-800 transition-colors ">
 								{item.name}
 							</h3>
-							<p className='primary-text text-sm'>${Number(item.price).toFixed(2)}</p>
+							<p className='primary-text text-sm'>{renderLocalizedPrice(item.price)}</p>
 						</div>
 						<p className='text-start text-sm mt-2'>{item.description}</p>
 					</div>
@@ -90,6 +124,7 @@ const Card = ({
 const NewArrivalsCard = () => {
 	const [activeIndex, setActiveIndex] = useState(0)
 	const [isMobile, setIsMobile] = useState(false)
+
 
 
 	const { data: newArrivals = [], isLoading } = useQuery({
@@ -134,6 +169,10 @@ const NewArrivalsCard = () => {
 			handlePrev() // Swiped right -> load previous image
 		}
 	}
+
+
+
+
 
 	if(isLoading){
 		return (

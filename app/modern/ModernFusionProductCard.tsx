@@ -5,6 +5,7 @@ import {useCart} from "@/app/context/CartContext";
 import {supabase} from "@/lib/supabaseClient";
 import Link from "next/link";
 import {motion} from "framer-motion"
+import {detectUserRegion, getExchangeRate, UserRegionConfig} from "@/lib/currencyService";
 
 
 const ITEMS_PER_PAGE = 3;
@@ -19,9 +20,38 @@ const ModernFusionProductCard = () => {
 
 	// Tracks chosen sizes per product ID, e.g., { "prod_123": "M" }
 	const [chosenSizes, setChosenSizes] = useState<Record<string, string>>({});
+	const [region, setRegion] = useState<UserRegionConfig | null>(null)
+	const [conversionRate, setConversionRate] = useState<number>(1)
 
 
 	const {addToCart} = useCart()
+
+
+	const BASE_DATABASE_CURRENCY = 'NGN'
+
+	useEffect(() => {
+		const initializeLocalizationPipline = async () => {
+			const detectRegion = await detectUserRegion();
+			setRegion(detectRegion);
+
+			const rate = await getExchangeRate(BASE_DATABASE_CURRENCY, detectRegion.currencyCode)
+			setConversionRate(rate)
+		}
+
+		initializeLocalizationPipline()
+	}, []);
+
+	const renderLocalizedPrice = (basePrice: number) => {
+		if(!region) return `₦${basePrice.toLocaleString()}`;
+
+		const convertedAmount = basePrice * conversionRate;
+
+		return  `${region.currencySymbol}${convertedAmount.toLocaleString(undefined, {
+			minimumFractionDigits: 2,
+			maximumFractionDigits: 2,
+		})} ${region.currencyCode}`
+	}
+
 
 
 	const renderTag = (rawTag: any) => {
@@ -161,7 +191,11 @@ const ModernFusionProductCard = () => {
 				<div className="col-span-full text-center py-10 text-on-surface-variant">No items found in this collection.</div>
 			) : (
 				products.map((product) => (
-					<div key={product.id} className='group relative space-y-4'>
+					<motion.div
+						initial={{opacity: 0, y:50}}
+						whileInView={{opacity: 1, y:0}}
+						transition={{duration: 0.6, ease: "easeIn"}}
+						key={product.id} className='group relative space-y-4'>
 
 						{/* FIX 1: Wrap the entire card container in the Link */}
 						<Link href={`/products/${product.id}`} className='block relative rounded-3xl overflow-hidden aspect-[3/4] glass-panel cursor-pointer'>
@@ -204,7 +238,7 @@ const ModernFusionProductCard = () => {
 								<h4 className='font-title-md text-title-md text-on-background'>{product.name}</h4>
 								<p className='font-body-md text-body-md text-on-surface-variant'>Heritage Series</p>
 							</div>
-							<p className='font-title-md text-title-md text-primary'>${Number(product.price).toFixed(2)}</p>
+							<p className='lg:font-title-md lg:text-title-md md:text-sm text-primary'>{renderLocalizedPrice(product.price)}</p>
 						</div>
 
 						{/* Sizes selection buttons */}
@@ -233,7 +267,7 @@ const ModernFusionProductCard = () => {
 							</div>
 						)}
 
-					</div>
+					</motion.div>
 				))
 			)}
 		</div>

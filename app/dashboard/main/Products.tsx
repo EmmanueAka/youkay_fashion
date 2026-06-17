@@ -2,7 +2,11 @@ import React, {useEffect, useRef, useState} from 'react'
 import ProductUploadModal from "@/components/ProductUploadModal";
 import {Category, ProductRecord} from "@/types";
 import {supabase} from "@/lib/supabaseClient";
+import {detectUserRegion, getExchangeRate, UserRegionConfig} from "@/lib/currencyService";
+import {useCart} from "@/app/context/CartContext";
 
+
+const BASE_DATABASE_CURRENCY = 'NGN'
 
 const Products = () => {
 	const [showModal, setShowModal] = useState(false)
@@ -16,10 +20,37 @@ const Products = () => {
 	const [showFilterDropDown, setShowFilterDropDown] = useState<boolean>(false)
 	const dropdownRef = useRef<HTMLDivElement>(null)
 
+	const [region, setRegion] = useState<UserRegionConfig | null>(null)
+	const [conversionRate, setConversionRate] = useState<number>(1)
+
 	// Pagination States
 	const [currentPage, setCurrentPage] = useState<number>(1)
 	const [totalCount, setTotalCount] = useState<number>(0)
 	const ITEMS_PER_PAGE = 10
+
+
+	useEffect(() => {
+		const initializeLocalizationPipline = async () => {
+			const detectRegion = await detectUserRegion();
+			setRegion(detectRegion);
+
+			const rate = await getExchangeRate(BASE_DATABASE_CURRENCY, detectRegion.currencyCode)
+			setConversionRate(rate)
+		}
+
+		initializeLocalizationPipline()
+	}, []);
+
+	const renderLocalizedPrice = (basePrice: number) => {
+		if(!region) return `₦${basePrice.toLocaleString()}`;
+
+		const convertedAmount = basePrice * conversionRate;
+
+		return  `${region.currencySymbol}${convertedAmount.toLocaleString(undefined, {
+			minimumFractionDigits: 2,
+			maximumFractionDigits: 2,
+		})} ${region.currencyCode}`
+	}
 
 
 	useEffect(() => {
@@ -201,9 +232,9 @@ const Products = () => {
 					</div>
 				</div>
 			<section
-				className='glass-panel  overflow-y-auto scrollbar-hide-default px-4 rounded-xl border border-white/20 '>
+				className='glass-panel  h-screen overflow-y-auto scrollbar-hide-default px-4 rounded-xl border border-white/20 '>
 				<div className='overflow-x-auto'>
-					<table className='w-full border-collapse text-left'>
+					<table className='w-full border-collapse text-left '>
 						<thead>
 						<tr className="border-b border-outline-variant/20 bg-surface-container-low/50">
 							<th className="p-6 font-title-md text-on-surface-variant text-[14px] uppercase tracking-widest">Product
@@ -286,11 +317,7 @@ const Products = () => {
 										</td>
 										<td className="p-6">
 											<div
-												className="font-title-md text-on-surface">${product.price.toLocaleString(undefined, {
-												minimumFractionDigits: 2,
-												maximumFractionDigits: 2
-											})}</div>
-											<div className="text-on-surface-variant font-label-sm">USD</div>
+												className="font-title-md text-on-surface">{renderLocalizedPrice(product.price)}</div>
 										</td>
 										<td className="p-6">
 											<div className="flex items-center gap-2">

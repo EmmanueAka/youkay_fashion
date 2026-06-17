@@ -6,6 +6,7 @@ import {useQuery} from "@tanstack/react-query";
 import {supabase} from "@/lib/supabaseClient";
 import {useCart} from "@/app/context/CartContext";
 import Link from "next/link";
+import {detectUserRegion, getExchangeRate, UserRegionConfig} from "@/lib/currencyService";
 
 
 const ITEMS_PER_PAGE = 4;
@@ -16,6 +17,7 @@ const SORT_OPTIONS = [
 	{ value: 'price_desc', label: 'Price: High to Low', column: 'price', ascending: false },
 	{ value: 'name_asc', label: 'Alphabetical (A-Z)', column: 'name', ascending: true },
 ]
+	const BASE_DATABASE_CURRENCY = 'NGN'
 
 const EveningCard = () => {
 	const [products, setProducts] = useState<any[]>([]);
@@ -23,9 +25,36 @@ const EveningCard = () => {
 	const [hasMore, setHasMore] = useState<boolean>(true);
 	const [sortBy, setSortBy] = useState<string>('created_at_desc');
 	const [chosenSizes, setChosenSizes] = useState<Record<string, string>>({});
+	const [region, setRegion] = useState<UserRegionConfig | null>(null)
+	const [conversionRate, setConversionRate] = useState<number>(1)
 
 	// Destructure context methods (assuming standard updateCartQuantity / removeFromCart support)
-	const { addToCart, cart, updateCartQuantity, removeFromCart } = useCart();
+	const { addToCart, cart, removeFromCart } = useCart();
+
+
+
+	useEffect(() => {
+		const initializeLocalizationPipline = async () => {
+			const detectRegion = await detectUserRegion();
+			setRegion(detectRegion);
+
+			const rate = await getExchangeRate(BASE_DATABASE_CURRENCY, detectRegion.currencyCode)
+			setConversionRate(rate)
+		}
+
+		initializeLocalizationPipline()
+	}, []);
+
+	const renderLocalizedPrice = (basePrice: number) => {
+		if(!region) return `₦${basePrice.toLocaleString()}`;
+
+		const convertedAmount = basePrice * conversionRate;
+
+		return  `${region.currencySymbol}${convertedAmount.toLocaleString(undefined, {
+			minimumFractionDigits: 2,
+			maximumFractionDigits: 2,
+		})} ${region.currencyCode}`
+	}
 
 
 	// 1. Clean up tags defensively for display
@@ -231,7 +260,7 @@ const EveningCard = () => {
 						<p className='md:font-body-md md:text-body-md text-on-surface-variant text-[12px]'>{mainProduct.description}</p>
 						</div>
 						<div className='text-right'>
-						<span className='md:font-title-md md:text-title-md text-on-background text-sm font-semibold'>${Number(mainProduct.price)}</span>
+						<span className='md:font-title-md md:text-title-md text-on-background text-sm font-semibold'>{renderLocalizedPrice(mainProduct.price)}</span>
 
 						</div>
 						</div>
@@ -263,7 +292,7 @@ const EveningCard = () => {
 							<div
 								className='absolute bottom-0 left-0 w-full p-6 bg-white/40 backdrop-blur-xl border-t border-white/20'>
 								<h3 className='font-title-md text-title-md text-white mb-1'>{product.name}</h3>
-								<p className='font-label-sm text-label-sm text-on-surface-variant mb-4'>${Number(product.price).toFixed(2)}</p>
+								<p className='font-label-sm text-label-sm text-on-surface-variant mb-4'>{renderLocalizedPrice(product.price)}</p>
 								{product.sizes && product.sizes.length > 0 && (
 									<div className='mt-2 pt-2 border-t border-outline-variant/10 flex flex-col items-start justify-start gap-2 mb-3'>
 										<div className='flex items-center gap-3'>

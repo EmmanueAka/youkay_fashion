@@ -5,10 +5,14 @@ import Link from 'next/link';
 import { supabase } from "@/lib/supabaseClient";
 import { useCart } from "@/app/context/CartContext";
 import {motion} from "framer-motion"
+import {detectUserRegion, getExchangeRate, UserRegionConfig} from "@/lib/currencyService";
 
 interface PageProps {
 	params: Promise<{ id: string }>;
 }
+
+
+const BASE_DATABASE_CURRENCY = 'NGN'
 
 export default function ProductDetailPage({ params }: PageProps) {
 	const resolvedParams = use(params);
@@ -18,11 +22,39 @@ export default function ProductDetailPage({ params }: PageProps) {
 	const [relatedProducts, setRelatedProducts] = useState<any[]>([]);
 	const [loading, setLoading] = useState<boolean>(true);
 	const [selectedSize, setSelectedSize] = useState<string>("");
+	const [region, setRegion] = useState<UserRegionConfig | null>(null)
+	const [conversionRate, setConversionRate] = useState<number>(1)
 
 	// Tracks which image asset index is currently expanded inside the main viewfinder
 	const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
 
 	const { addToCart, cart, removeFromCart } = useCart();
+
+
+
+	useEffect(() => {
+		const initializeLocalizationPipline = async () => {
+			const detectRegion = await detectUserRegion();
+			setRegion(detectRegion);
+
+			const rate = await getExchangeRate(BASE_DATABASE_CURRENCY, detectRegion.currencyCode)
+			setConversionRate(rate)
+		}
+
+		initializeLocalizationPipline()
+	}, []);
+
+	const renderLocalizedPrice = (basePrice: number) => {
+		if(!region) return `₦${basePrice.toLocaleString()}`;
+
+		const convertedAmount = basePrice * conversionRate;
+
+		return  `${region.currencySymbol}${convertedAmount.toLocaleString(undefined, {
+			minimumFractionDigits: 2,
+			maximumFractionDigits: 2,
+		})} ${region.currencyCode}`
+	}
+
 
 	useEffect(() => {
 		const fetchProductAndRelated = async () => {
@@ -178,7 +210,7 @@ export default function ProductDetailPage({ params }: PageProps) {
 						<h1 className="md:font-display-lg md:text-display-lg text-lg font-semibold text-on-background mb-1">{product.name}</h1>
 						<p className="font-body-md text-body-md text-on-surface-variant">Heritage Series</p>
 					</div>
-					<p className="font-title-lg text-title-lg text-primary">${Number(product.price).toFixed(2)}</p>
+					<p className="font-title-lg text-title-lg text-primary">{renderLocalizedPrice(product.price)}</p>
 					<p className="md:font-body-lg md:text-body-lg text-on-surface-variant leading-relaxed">{product.description}</p>
 
 					{product.sizes && Array.isArray(product.sizes) && product.sizes.length > 0 && (
@@ -231,7 +263,7 @@ export default function ProductDetailPage({ params }: PageProps) {
 
 					className="pt-16 border-t border-outline-variant">
 					<h2 className="font-headline-lg text-headline-lg mb-8 text-start">Complete the Look</h2>
-					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter">
+					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-gutter ">
 						{relatedProducts.map((item) => (
 							<Link key={item.id} href={`/products/${item.id}`} className="group block space-y-3">
 								<div className="h-34 w-24 md:h-64 md:w-44 relative rounded-2xl overflow-hidden bg-surface-container-high shadow-sm">
@@ -241,12 +273,12 @@ export default function ProductDetailPage({ params }: PageProps) {
 										className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
 									/>
 								</div>
-								<div className="flex  justify-between items-start px-1">
+								<div className="flex  flex-col space-y-2 items-start px-1">
 									<div>
 										<h4 className="font-title-sm text-sm text-on-background font-bold group-hover:text-primary transition-colors line-clamp-1">{item.name}</h4>
 										<p className="text-xs text-on-surface-variant">Heritage Series</p>
 									</div>
-									<p className="font-title-sm text-sm text-primary font-semibold">${Number(item.price).toFixed(2)}</p>
+									<p className="font-title-sm text-sm text-primary font-semibold">{renderLocalizedPrice(item.price)}</p>
 								</div>
 							</Link>
 						))}

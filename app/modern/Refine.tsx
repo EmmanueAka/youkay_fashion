@@ -2,6 +2,7 @@
 
 import React from 'react'
 import ModernFusionProductCard from "@/app/modern/ModernFusionProductCard";
+import {motion} from 'framer-motion'
 
 const Refine = () => {
 	return (
@@ -12,7 +13,11 @@ const Refine = () => {
 						<h3 className='font-headline-lg text-headline-lg mb-6'>
 							Refine
 						</h3>
-						<div className='space-y-4'>
+						<motion.div
+							initial={{opacity:0, x: 50}}
+							whileInView={{opacity: 1, x:0}}
+							transition={{duration: 0.6, ease: "easeIn"}}
+							className='space-y-4'>
 							<label className='flex items-center gap-3 cursor-pointer group'>
 								<input className='rounded border-outline-variant text-primary focus:ring-primary h-5 w-5 ' type='checkbox'/>
 								<span className='font-body-md text-body-md group-hover:text-primary transition-colors'>Ankara Prints</span>
@@ -32,7 +37,7 @@ const Refine = () => {
 								<input className='rounded border-outline-variant text-primary focus:ring-primary h-5 w-5 ' type='checkbox'/>
 								<span className='font-body-md text-body-md group-hover:text-primary transition-colors'>Structural Knits</span>
 							</label>
-						</div>
+						</motion.div>
 
 						<div className='pt-6 border-t border-outline-variant'>
 							<p className='font-label-sm text-label-sm text-on-surface-variant  mb-2'>PRICE RANGE</p>

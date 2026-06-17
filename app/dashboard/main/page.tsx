@@ -12,6 +12,8 @@ const Page = () => {
 	const [activePage, setActivePage] = useState('Dashboard')
 	const [loading, setLoading] = useState(false)
 
+
+
 	const {user, logout } = useAuth()
 
 	const handleLogout = async () => {
